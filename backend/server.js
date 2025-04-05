@@ -1,11 +1,9 @@
-//  /backend/server.js
-
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const jwt = require('jsonwebtoken');
 const { sequelize } = require('./config/DB');
-const User = require('./models/User');
+const authRoutes = require('./routes/authRoutes');
+const { port } = require('./config/env');
 
 const app = express();
 app.use(cors());
@@ -20,109 +18,10 @@ sequelize.sync({ force: true })
     console.error('Error al sincronizar las tablas:', error);
   });
 
+// Rutas
+app.use('/api', authRoutes);
 
+app.use('/api/property', propertyRoutes);
 
-/** 📌 Generar Access Token */
-const generateAccessToken = (user) => {
-  return jwt.sign(
-    { id_user: user.id_user, email: user.email },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.TOKEN_EXPIRATION }
-  );
-};
-
-/** 📌 Generar Refresh Token */
-const generateRefreshToken = (user) => {
-  return jwt.sign(
-    { id_user: user.id_user },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: process.env.REFRESH_TOKEN_EXPIRATION }
-  );
-};
-
-/** 📌 Middleware para verificar el Access Token */
-const verifyToken = (req, res, next) => {
-  const token = req.headers['authorization'];
-  if (!token) return res.status(403).json({ message: 'Token requerido' });
-
-  jwt.verify(token.split(" ")[1], process.env.JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ message: 'Token inválido' });
-    req.user = decoded;
-    next();
-  });
-};
-
-/** 📌 Registrar usuario */
-app.post('/api/register', async (req, res) => {
-  const { email, nombre, telefono, uid } = req.body;
-  if (!email || !nombre || !uid) return res.status(400).json({ message: 'Faltan datos' });
-
-  try {
-    const user = await User.create({ email, nombre, telefono, uid });
-    const accessToken = generateAccessToken(user);
-    const refreshToken = generateRefreshToken(user);
-
-    user.refreshToken = refreshToken;
-    await user.save();
-
-    res.status(201).json({ accessToken, refreshToken });
-  } catch (error) {
-    res.status(500).json({ message: 'Error al registrar usuario', error });
-  }
-});
-
-/** 📌 Iniciar sesión */
-app.post('/api/login', async (req, res) => {
-  const { email, uid } = req.body;
-  if (!email || !uid) return res.status(400).json({ message: 'Faltan datos' });
-
-  const user = await User.findOne({ where: { email, uid } });
-  if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
-
-  const accessToken = generateAccessToken(user);
-  const refreshToken = generateRefreshToken(user);
-
-  user.refreshToken = refreshToken;
-  await user.save();
-
-  res.status(200).json({ accessToken, refreshToken });
-});
-
-/** 📌 Refrescar token */
-app.post('/api/refresh', async (req, res) => {
-  const { refreshToken } = req.body;
-  if (!refreshToken) return res.status(403).json({ message: 'Refresh Token requerido' });
-
-  const user = await User.findOne({ where: { refreshToken } });
-  if (!user) return res.status(403).json({ message: 'Refresh Token inválido' });
-
-  jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, (err, decoded) => {
-    if (err) return res.status(403).json({ message: 'Refresh Token expirado' });
-
-    const newAccessToken = generateAccessToken(user);
-    res.status(200).json({ accessToken: newAccessToken });
-  });
-});
-
-/** 📌 Obtener perfil del usuario autenticado */
-app.get('/api/profile', verifyToken, async (req, res) => {
-  const user = await User.findByPk(req.user.id_user);
-  if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
-
-  res.status(200).json({ email: user.email, nombre: user.nombre, telefono: user.telefono });
-});
-
-/** 📌 Actualizar usuario */
-app.put('/api/updateUser', verifyToken, async (req, res) => {
-  const { nombre, email, telefono } = req.body;
-  const user = await User.findByPk(req.user.id_user);
-
-  if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
-
-  await user.update({ nombre, email, telefono });
-  res.status(200).json({ message: 'Usuario actualizado con éxito' });
-});
-
-/** 📌 Iniciar servidor */
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Servidor corriendo en http://localhost:${PORT}`));
+// Iniciar servidor
+app.listen(port, () => console.log(`Servidor corriendo en http://localhost:${port}`));

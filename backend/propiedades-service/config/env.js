@@ -1,9 +1,10 @@
-//   backend/config/env.js
+// /backend/propiedades-service/config/env.js
 
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
+
 
 module.exports = {
-  port: process.env.PORT || 3000,
+  port: process.env.PORT_PROP,
   jwtSecret: process.env.JWT_SECRET,
   jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
   tokenExpiration: process.env.TOKEN_EXPIRATION,

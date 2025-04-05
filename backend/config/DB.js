@@ -1,4 +1,6 @@
-// backend/DB.js
+// backend/config/DB.js
+
+
 const { Sequelize } = require('sequelize');
 
 // Crear una instancia de Sequelize
