@@ -1,3 +1,5 @@
+
+
 const router = require('express').Router();
 const ctrl = require('../controllers/propertyController');
 const verify = require('../middlewares/authMiddleware');

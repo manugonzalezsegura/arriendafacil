@@ -9,7 +9,7 @@ import { lastValueFrom } from 'rxjs';
 })
 export class AuthService {
 
-
+  
   private apiUrl = 'http://localhost:3000/api/register';  // URL del backend
 
   constructor(private auth: Auth, private http: HttpClient) {}
