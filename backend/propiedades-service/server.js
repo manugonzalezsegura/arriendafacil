@@ -4,9 +4,10 @@
 
 require('dotenv').config();
 const express = require('express');
-const cors    = require('cors');
-const { sequelize }       = require('./config/DB');
-const propertyRoutes      = require('./routes/propertyRoutes');
+const cors = require('cors');
+const { sequelize } = require('./config/DB');
+const propertyRoutes  = require('./routes/propertyRoutes');
+const userStubRoutes = require('./routes/userStubRoutes');
 const { port, jwtSecret } = require('./config/env');
 
 // env.js en propiedades-service debe leer PORT_PROP:
@@ -22,6 +23,7 @@ sequelize.sync({ force: true })
   .catch(err => console.error('❌ Error DB Properties:', err));
 
 // Importamos correctamente las rutas ANTES de usarlas
+app.use(userStubRoutes);
 app.use('/api/properties', propertyRoutes);
 
 // Iniciar servidor

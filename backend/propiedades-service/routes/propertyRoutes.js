@@ -1,8 +1,10 @@
-
+////backend/propiedades-service/routes/userStubRoutes.js:
 
 const router = require('express').Router();
 const ctrl = require('../controllers/propertyController');
 const verify = require('../middlewares/authMiddleware');
+
+
 
 router.post('/create', verify, ctrl.createProperty);
 router.get('/',            ctrl.getProperties);

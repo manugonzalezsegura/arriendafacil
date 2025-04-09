@@ -35,3 +35,6 @@ const Property = sequelize.define('Property', {
 UserStub.hasMany(Property, { foreignKey: 'id_user' });
 Property.belongsTo(UserStub, { foreignKey: 'id_user' });
 module.exports = Property;
+
+
+//verificar mi logica si busco si existe el usuario en userstub antes de insertar datos : Verifica en su base local si ya existe el usertub para ese usuario.

@@ -12,7 +12,7 @@ app.use(cors());
 app.use(express.json());
 
 // Sincronizar todas las tablas de este servicio (modo desarrollo)
-sequelize.sync({ force: false })
+sequelize.sync({ force: true })
   .then(() => console.log('🔄 Auth DB sincronizada (force: true)'))
   .catch(err => console.error('❌ Error DB Auth:', err));
 

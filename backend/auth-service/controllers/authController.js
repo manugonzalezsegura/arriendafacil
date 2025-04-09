@@ -2,6 +2,7 @@
 
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const axios = require('axios');
 const { jwtSecret, jwtRefreshSecret, tokenExpiration, refreshTokenExpiration } = require('../config/env');
 
 const generateAccessToken = user =>
@@ -10,6 +11,8 @@ const generateAccessToken = user =>
 const generateRefreshToken = user =>
   jwt.sign({ id_user: user.id_user }, jwtRefreshSecret, { expiresIn: refreshTokenExpiration });
 
+
+
 exports.register = async (req, res) => {
   const { email, nombre, telefono, uid } = req.body;
   if (!email || !nombre || !uid) return res.status(400).json({ message: 'Faltan datos' });
@@ -17,12 +20,30 @@ exports.register = async (req, res) => {
     const user = await User.create({ email, nombre, telefono, uid });
     const accessToken = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-    user.refreshToken = refreshToken; await user.save();
+    user.refreshToken = refreshToken; 
+    await user.save();
+
+
+    await axios.post('http://localhost:3001/api/usersync', {
+      id_user: user.id_user,
+      uid: user.uid
+    });
+
     res.status(201).json({ accessToken, refreshToken });
+
+
   } catch (error) {
     res.status(500).json({ message: 'Error al registrar usuario', error });
+
+
   }
+
+
+
 };
+
+
+
 
 exports.login = async (req, res) => {
   const { email, uid } = req.body;
