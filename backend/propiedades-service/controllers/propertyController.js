@@ -50,6 +50,8 @@ exports.updateProperty = async (req, res) => {
   }
 };
 
+
+// pendiente de modificar o eliminar ya que quiero un soft delete
 exports.deleteProperty = async (req, res) => {
   try {
     const prop = await Property.findByPk(req.params.id);

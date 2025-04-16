@@ -9,7 +9,7 @@ module.exports = {
   tokenExpiration: process.env.TOKEN_EXPIRATION,
   refreshTokenExpiration: process.env.REFRESH_TOKEN_EXPIRATION,
   db: {
-    name: process.env.DB_NAME,
+    name: process.env.DB_NAME_AUTH,
     user: process.env.DB_USER,
     pass: process.env.DB_PASS,
     host: process.env.DB_HOST

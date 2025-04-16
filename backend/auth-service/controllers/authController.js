@@ -24,7 +24,14 @@ exports.register = async (req, res) => {
     await user.save();
 
 
+    // pendiente de actualizar esta forma de guardar id_user en userstub  podria ussar talvez RabbitMQ:
+
     await axios.post('http://localhost:3001/api/usersync', {
+      id_user: user.id_user,
+      uid: user.uid
+    });
+
+    await axios.post('http://localhost:3002/api/usersync', {
       id_user: user.id_user,
       uid: user.uid
     });

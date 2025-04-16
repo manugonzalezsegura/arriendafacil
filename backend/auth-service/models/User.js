@@ -13,3 +13,5 @@ const User = sequelize.define('User', {
 }, { timestamps: true });
 
 module.exports = User;
+
+//investigar posibilidad de autogenerar la vista 

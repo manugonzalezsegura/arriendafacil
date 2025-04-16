@@ -12,4 +12,4 @@ router.get('/:id',         ctrl.getPropertyById);
 router.put('/:id', verify, ctrl.updateProperty);
 router.delete('/:id',verify, ctrl.deleteProperty);
 
-module.exports = router;
+module.exports = router; 
