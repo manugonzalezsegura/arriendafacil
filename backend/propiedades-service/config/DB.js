@@ -1,14 +1,14 @@
 //     /backend/propiedades-service/config/DB.js
+const { Sequelize } = require('sequelize')
+const config =require('./env')
 
-const { Sequelize } = require('sequelize');
-const { db } = require('./env');
+const sequelize = new Sequelize (
 
-const sequelize = new Sequelize(
-  db.name, db.user, db.pass, {
-    host: db.host,
-    dialect: 'mysql',
-    logging: false
-  }
+  config.db.name,
+  config.db.user,
+  config.db.pass,
+
+  {host: config.db.host, port:config.db.port, dialect:'mysql', logging:console.log}
+
 );
-
 module.exports = { sequelize };

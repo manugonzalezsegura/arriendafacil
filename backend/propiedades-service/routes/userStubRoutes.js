@@ -1,9 +1,9 @@
 ///backend/propiedades-service/routes/userStubRoutes.js :
 
-const express = require('express');
-const router = express.Router();
+const express         = require('express');
 const { syncUserStub } = require('../controllers/userStubController');
+const router          = express.Router();
 
-router.post('/api/usersync', syncUserStub);
+router.post('/usersync', syncUserStub);
 
 module.exports = router;

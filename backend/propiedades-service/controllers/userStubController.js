@@ -1,22 +1,29 @@
-//   /backend/propiedades-service/routes/userStubRoutes.js:
+//   /backend/propiedades-service/controllers/userStubcontrollers.js:
 
 const UserStub = require('../models/UserStub');
 
-exports.syncUserStub = async (req, res) => {
-  const { id_user, uid } = req.body;
+
+async function upsertUserStub({ id_user, uid }) {
   if (!id_user || !uid) {
-    return res.status(400).json({ message: 'Faltan datos' });
+    throw new Error('Faltan datos obligatorios: id_user y uid');
   }
+  await UserStub.upsert({ id_user, uid });
+  console.log(`📥 UserStub upsert: ${id_user} / ${uid}`);
+}
+
+
+async function syncUserStub(req, res) {
   try {
-    let userStub = await UserStub.findByPk(id_user);
-    if (!userStub) {
-      userStub = await UserStub.create({ id_user, uid });
-    } else {
-      // En caso de que se necesite actualizar algún dato mínimo
-      await userStub.update({ uid });
-    }
+    await upsertUserStub(req.body);
     res.status(200).json({ message: 'UserStub sincronizado' });
-  } catch (error) {
-    res.status(500).json({ message: 'Error al sincronizar userstub', error });
+  } catch (err) {
+    res.status(400).json({ message: err.message, error: err });
   }
-};
+}
+
+
+
+module.exports = { syncUserStub, upsertUserStub };
+
+
+

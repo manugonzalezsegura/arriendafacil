@@ -1,52 +1,45 @@
 // /backend/auth-service/controllers/authController.js
-
+const { publish } = require('../utils/rabbitmq');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
-const axios = require('axios');
-const { jwtSecret, jwtRefreshSecret, tokenExpiration, refreshTokenExpiration } = require('../config/env');
+const {
+  jwt: {
+    secret:        jwtSecret,
+    refreshSecret: jwtRefreshSecret,
+    expiresIn:     tokenExpiration,
+    refreshExpires:refreshTokenExpiration
+  }
+} =require('../config/env');
+
 
 const generateAccessToken = user =>
-  jwt.sign({ id_user: user.id_user, email: user.email }, jwtSecret, { expiresIn: tokenExpiration });
+  jwt.sign({ id_user: user.id_user, email: user.email },jwtSecret,{ expiresIn: tokenExpiration });
 
 const generateRefreshToken = user =>
-  jwt.sign({ id_user: user.id_user }, jwtRefreshSecret, { expiresIn: refreshTokenExpiration });
-
-
+  jwt.sign({ id_user: user.id_user },jwtRefreshSecret,{ expiresIn: refreshTokenExpiration });
 
 exports.register = async (req, res) => {
   const { email, nombre, telefono, uid } = req.body;
   if (!email || !nombre || !uid) return res.status(400).json({ message: 'Faltan datos' });
+
   try {
     const user = await User.create({ email, nombre, telefono, uid });
-    const accessToken = generateAccessToken(user);
+    const accessToken  = generateAccessToken(user);
     const refreshToken = generateRefreshToken(user);
-    user.refreshToken = refreshToken; 
+    user.refreshToken = refreshToken;
     await user.save();
 
-
-    // pendiente de actualizar esta forma de guardar id_user en userstub  podria ussar talvez RabbitMQ:
-
-    await axios.post('http://localhost:3001/api/usersync', {
+    // — Publica el evento —
+    await publish('user.registered', {
       id_user: user.id_user,
-      uid: user.uid
-    });
-
-    await axios.post('http://localhost:3002/api/usersync', {
-      id_user: user.id_user,
-      uid: user.uid
+      nombre:  user.nombre,
+      uid:     user.uid
     });
 
     res.status(201).json({ accessToken, refreshToken });
-
-
   } catch (error) {
     res.status(500).json({ message: 'Error al registrar usuario', error });
-
-
   }
-
-
-
 };
 
 

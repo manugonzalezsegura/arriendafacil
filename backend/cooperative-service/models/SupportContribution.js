@@ -1,7 +1,10 @@
 //  /backend/cooperativa-service/models/SupportContribution.js
 
+const CooperativeMember = require('./CooperativeMember');
+const SupportRequest = require('./SupportRequest'); 
 const { DataTypes } = require('sequelize'); 
 const { sequelize } = require('../config/DB'); 
+
 
 const SupportContribution = sequelize.define('SupportContribution', { 
   id_contribution: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true }, 

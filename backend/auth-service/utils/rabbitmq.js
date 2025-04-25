@@ -1,17 +1,26 @@
-// backend/auth-service/utils/rabbitmq.js
+// utils/rabbit.js
 const amqp = require('amqplib');
-const { rabbitUrl } = require('../config/env');
+const {rabbit} = require('../config/env');//importo submodulo
+const rabbiturl = rabbit.url;  //desestructuro para acceder a sus valores 
 
-async function publish(queue, msg) {
-  const conn = await amqp.connect(rabbitUrl);
-  const ch   = await conn.createChannel();
-  await ch.assertQueue(queue, { durable: true });
-  ch.sendToQueue(queue,
-    Buffer.from(JSON.stringify(msg)),
-    { persistent: true }
-  );
-  await ch.close();
-  await conn.close();
+let channel = null;
+
+/**
+ * initRabbit(): abre UNA vez la conexión y canal.
+ */
+async function initRabbit() {
+  const conn = await amqp.connect(rabbiturl);
+  channel    = await conn.createChannel();
+  console.log('✅ Auth Service: RabbitMQ conectado');
 }
 
-module.exports = { publish };
+/**
+ * publish(queue, msg): publica en la cola indicada.
+ */
+async function publish(queue, msg) {
+  if (!channel) throw new Error('RabbitMQ channel no inicializado');
+  await channel.assertQueue(queue, { durable: true });
+  channel.sendToQueue(queue, Buffer.from(JSON.stringify(msg)), { persistent: true });
+}
+
+module.exports = { initRabbit, publish };

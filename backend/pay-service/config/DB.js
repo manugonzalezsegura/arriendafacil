@@ -1,4 +1,4 @@
-// /backend/auth-service/config/DB.js
+// /backend/pay-service/config/DB.js
 
 const { Sequelize } = require('sequelize');
 const { db } = require('./env');
