@@ -27,7 +27,7 @@ module.exports = {
     // 4) Puerto en el que corre este microservicio
 
   ports:{
-    prop: Number(process.env.PORT_GROUP)||3002,
+    coop: Number(process.env.PORT_GROUP)||3002,
   },
 
    // 5) Conexión a RabbitMQ (omite este bloque si tu servicio aún no lo usa)

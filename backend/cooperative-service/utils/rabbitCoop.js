@@ -1,5 +1,6 @@
-// /backend/payment-service/utils/rabbitmq.js
-const amqp = require('amqplib');
+// backend/cooperative-service/utils/rabbitprop.js
+
+const amqp = require ('amqplib');
 const {rabbit} = require('../config/env');//importo submodulo
 const rabbiturl = rabbit.url;  //desestructuro para acceder a sus valores 
 

@@ -3,12 +3,12 @@
 const UserStub = require('../models/UserStub');
 
 
-async function upsertUserStub({ id_user, uid }) {
+async function upsertUserStub({ id_user, nombre}) {
   if (!id_user || !uid) {
     throw new Error('Faltan datos obligatorios: id_user y uid');
   }
-  await UserStub.upsert({ id_user, uid });
-  console.log(`📥 UserStub upsert: ${id_user} / ${uid}`);
+  await UserStub.upsert({ id_user, nombre});
+  console.log(`📥 UserStub upsert: ${id_user} / ${nombre}`);
 }
 
 

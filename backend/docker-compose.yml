@@ -1,6 +1,9 @@
+# backend/docker-compose.yml
 version: '3.8'
 
 services:
+
+  # 1) Base de datos MySQL
   db:
     image: mysql:8.0
     env_file:
@@ -12,13 +15,12 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
-      - ./initdb:/docker-entrypoint-initdb.d:ro   # <— mismo nivel que db_data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
       interval: 5s
       timeout: 3s
       retries: 5
-    
 
   # 2) phpMyAdmin
   phpmyadmin:
@@ -44,6 +46,11 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
 
   # 4) Auth Service
   auth-service:
@@ -53,19 +60,11 @@ services:
       - ./.env
     ports:
       - "${PORT_AUTH}:3000"
-    environment:
-      DB_HOST: "db"
-      DB_NAME: "${DB_NAME_AUTH}"
-      DB_USER: "${DB_USER}"
-      DB_PASS: "${DB_PASS}"
-      JWT_SECRET: "${JWT_SECRET}"
-      JWT_REFRESH_SECRET: "${JWT_REFRESH_SECRET}"
-      TOKEN_EXPIRATION: "${TOKEN_EXPIRATION}"
-      REFRESH_TOKEN_EXPIRATION: "${REFRESH_TOKEN_EXPIRATION}"
-      RABBITMQ_URL: "${RABBITMQ_URL}"
     depends_on:
-      - db
-      - rabbitmq
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   # 5) Properties Service
   propiedades-service:
@@ -75,13 +74,6 @@ services:
       - ./.env
     ports:
       - "${PORT_PROP}:3001"
-    environment:
-      DB_HOST: "db"
-      DB_NAME: "${DB_NAME_PROP}"
-      DB_USER: "${DB_USER}"
-      DB_PASS: "${DB_PASS}"
-      JWT_SECRET: "${JWT_SECRET}"
-      RABBITMQ_URL: "${RABBITMQ_URL}"
     depends_on:
       db:
         condition: service_healthy
@@ -96,15 +88,11 @@ services:
       - ./.env
     ports:
       - "${PORT_GROUP}:3002"
-    environment:
-      DB_HOST: "db"
-      DB_NAME: "${DB_NAME_COOP}"
-      DB_USER: "${DB_USER}"
-      DB_PASS: "${DB_PASS}"
-      RABBITMQ_URL: "${RABBITMQ_URL}"
     depends_on:
-      - db
-      - rabbitmq
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
   # 7) Payment Service
   pay-service:
@@ -114,17 +102,11 @@ services:
       - ./.env
     ports:
       - "${PORT_PAYMENT}:3003"
-    environment:
-      DB_HOST: "db"
-      DB_NAME: "${DB_NAME_PAYMENT}"
-      DB_USER: "${DB_USER}"
-      DB_PASS: "${DB_PASS}"
-      TBK_COMMERCE_CODE: "${TBK_COMMERCE_CODE}"
-      TBK_API_KEY: "${TBK_API_KEY}"
-      RABBITMQ_URL: "${RABBITMQ_URL}"
     depends_on:
-      - db
-      - rabbitmq
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
 
 volumes:
   db_data:
