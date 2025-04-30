@@ -1,29 +1,23 @@
 //   /backend/coperative-service/controllers/userStubcontrollers.js:
 
-const UserStub = require('../models/UserStub');
+// /backend/cooperativa-service/controllers/userStubController.js
 
+const Usuario = require('../models/UserStub');
 
-async function upsertUserStub({ id_user, uid }) {
-  if (!id_user || !uid) {
-    throw new Error('Faltan datos obligatorios: id_user y uid');
+// Upsert de la tabla Usuario
+async function upsertUsuario({ id_usuario, uid }) {
+  if (!id_usuario || !uid) {
+    throw new Error('Faltan datos obligatorios: id_usuario y uid');
   }
-  await UserStub.upsert({ id_user, uid });
-  console.log(`📥 UserStub upsert: ${id_user} / ${uid}`);
+  await Usuario.upsert({ id_usuario, uid });
+  console.log(`📥 Usuario upsert: ${id_usuario} / ${uid}`);
 }
 
-
-async function syncUserStub(req, res) {
+exports.syncUsuario = async (req, res) => {
   try {
-    await upsertUserStub(req.body);
-    res.status(200).json({ message: 'UserStub sincronizado' });
+    await upsertUsuario(req.body);
+    res.status(200).json({ message: 'Usuario sincronizado' });
   } catch (err) {
     res.status(400).json({ message: err.message, error: err });
   }
-}
-
-
-
-module.exports = { syncUserStub, upsertUserStub };
-
-
-
+};

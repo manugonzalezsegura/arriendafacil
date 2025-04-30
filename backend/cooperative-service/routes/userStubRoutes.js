@@ -1,15 +1,10 @@
-///backend/propiedades-service/routes/userStubRoutes.js :
-
+// /backend/cooperativa-service/routes/userStubRoutes.js
 const express = require('express');
 const router = express.Router();
-const { syncUserStub } = require('../controllers/userStubController');
 
-router.post('/usersync', syncUserStub);
+const { syncUsuario } = require('../controllers/userStubController');
+
+// Ruta para sincronizar usuario
+router.post('/syncUsuario', syncUsuario);
 
 module.exports = router;
-
-
-
-
-
-

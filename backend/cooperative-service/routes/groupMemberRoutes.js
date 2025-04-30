@@ -2,11 +2,15 @@
 const express = require('express');
 const router = express.Router();
 
-const groupMemberController = require('../controllers/groupMemberController');
+const {
+  solicitarIngresoGrupo,
+  obtenerSolicitudesPorGrupo,
+  actualizarEstadoSolicitud
+} = require('../controllers/MembresiaCooperativaController');
 
-// Rutas para GroupMember (solicitudes para unirse a un grupo)
-router.post('/:id_group/requests', groupMemberController.requestJoinGroup);
-router.get('/:id_group/requests', groupMemberController.getGroupRequests);
-router.put('/requests/:id', groupMemberController.updateGroupRequestStatus);
+// Rutas para solicitudes de ingreso a un grupo
+router.post('/:id_cooperativa/solicitudes', solicitarIngresoGrupo);
+router.get('/:id_cooperativa/solicitudes', obtenerSolicitudesPorGrupo);
+router.put('/solicitudes/:id', actualizarEstadoSolicitud);
 
 module.exports = router;
