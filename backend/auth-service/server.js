@@ -3,13 +3,17 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
-const { sequelize } = require('./config/DB');
+const { sequelize } = require('./shared-models');
 const authRoutes    = require('./routes/authRoutes');
 const { initRabbit } = require('./utils/rabbitmq');
 const { ports }      = require('./config/env');  // ahora port sí vendrá definido
 
+// 2) DEPURACIÓN: ¿de dónde arranco y qué hay en shared-models?
+console.log('— auth-service __dirname:', __dirname);
+console.log('— shared-models files:', fs.readdirSync(path.resolve(__dirname, '../shared-models')));
 
-
+// 3) Importo TODOS los modelos y relaciones definidas en shared-models/index.js
+require('./shared-models');
 
 const app = express();
 app.use(cors());

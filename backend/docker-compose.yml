@@ -66,6 +66,11 @@ services:
       rabbitmq:
         condition: service_healthy
 
+    volumes:
+      - ./shared-models:/app/shared-models:ro
+
+
+
   # 5) Properties Service
   propiedades-service:
     build:
@@ -79,6 +84,11 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - ./shared-models:/app/shared-models:ro
+
+
+
 
   # 6) Cooperative Service
   cooperative-service:
@@ -107,6 +117,10 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
+    volumes:
+      - ./shared-models:/app/shared-models:ro
+
+
 
 volumes:
   db_data:

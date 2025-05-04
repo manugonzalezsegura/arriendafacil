@@ -8,9 +8,9 @@ const sequelize = new Sequelize(
     host: db.host,
     port: db.port,
     dialect: 'mysql',
-    logging: false
+    logging: console.log
   }
 );
 
 module.exports = { sequelize };
- 
+
