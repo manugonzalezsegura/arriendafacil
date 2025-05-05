@@ -1,4 +1,4 @@
-///backend/auth-service/config/env.js
+///backend/profile-service/config/env.js
 
 require('dotenv').config();
 

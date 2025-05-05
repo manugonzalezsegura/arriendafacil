@@ -1,6 +1,6 @@
 //   /backend/propiedades-service/controllers/userStubcontrollers.js:
 
-const UserStub = require('../models/UserStub');
+//const UserStub = require('../models/UserStub');
 
 
 async function upsertUserStub({ id_user, uid }) {

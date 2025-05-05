@@ -184,3 +184,48 @@ exports.updateUser = async (req, res) => {
     }
   });
 };
+
+
+
+
+
+// 🔥 Ruta: POST /api/auth/firebase-login
+exports.firebaseLogin = async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+      return res.status(400).json({ message: 'Token de Firebase requerido' });
+  }
+
+  try {
+      // 1️⃣ — Verificar el ID Token de Firebase
+      const decodedToken = await admin.auth().verifyIdToken(idToken);
+      const uid = decodedToken.uid;
+
+      // 2️⃣ — Buscar o crear el usuario en tu BD
+      let usuario = await Usuario.findOne({ where: { uid } });
+      if (!usuario) {
+          // Si no existe, crea un usuario con UID y correo (si está en el token)
+          usuario = await Usuario.create({
+              uid,
+              correo: decodedToken.email || `sin-correo-${uid}@ejemplo.com`
+          });
+      }
+
+      // 3️⃣ — Generar tu JWT personalizado
+      const payload = {
+          id_usuario: usuario.id_usuario,
+          correo: usuario.correo
+      };
+
+      const token = jwt.sign(payload, jwtConfig.secret, {
+          expiresIn: jwtConfig.expiresIn || '1h'
+      });
+
+      res.json({ token });
+
+  } catch (error) {
+      console.error('❌ Error verificando ID Token:', error);
+      res.status(401).json({ message: 'Token inválido o expirado' });
+  }
+};

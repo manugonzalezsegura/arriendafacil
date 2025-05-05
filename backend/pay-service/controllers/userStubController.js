@@ -1,4 +1,4 @@
-//   /backend/coperative-service/controllers/userStubcontrollers.js:
+/*/   /backend/coperative-service/controllers/userStubcontrollers.js:
 
 const UserStub = require('../models/UserStub');
 
@@ -25,5 +25,5 @@ async function syncUserStub(req, res) {
 
 module.exports = { syncUserStub, upsertUserStub };
 
-
+*/
 

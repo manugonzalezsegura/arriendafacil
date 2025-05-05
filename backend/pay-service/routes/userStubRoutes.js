@@ -1,4 +1,4 @@
-///backend/propiedades-service/routes/userStubRoutes.js :
+/*//backend/propiedades-service/routes/userStubRoutes.js :
 
 const express = require('express');
 const router = express.Router();
@@ -8,7 +8,7 @@ router.post('/usersync', syncUserStub);
 
 module.exports = router;
 
-
+*/
 
 
 

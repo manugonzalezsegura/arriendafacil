@@ -10,4 +10,9 @@ router.post('/refresh',  ctrl.refresh);
 router.get('/profile',   verify, ctrl.getProfile);
 router.put('/updateUser',verify, ctrl.updateUser);
 
+
+router.post('/firebase-login', ctrl.firebaseLogin);
+
+
+
 module.exports = router;

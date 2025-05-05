@@ -1,4 +1,4 @@
-// /backend/payment-service/models/UserStub.js
+/*/ /backend/payment-service/models/UserStub.js
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/DB');
 
@@ -9,3 +9,4 @@ timestamps: false
 });
 
 module.exports = UserStub;
+*/

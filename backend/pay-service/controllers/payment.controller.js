@@ -1,98 +1,115 @@
-// /backend/payment-service/controllers/payment.controller.js
-const { Transaction } = require('transbank-sdk');
-const PaymentIntent = require('../models/PaymentIntent');
-const UserStub        = require('../models/UserStub');
-const { tbkCommerceCode, tbkApiKey } = require('../config/env');
-const { publish } = require('../utils/rabbitmq');// pendiente de crear utilidad 
+// /backend/pay-service/controllers/payment.controller.js
 
+// 1️⃣ — IMPORTACIONES
+const { WebpayPlus } = require('transbank-sdk');
+const { IntentoPago, Usuario } = require('../models'); // Modelos compartidos (shared-models)
+const { transbank } = require('../config/env');
+const { publish } = require('../utils/rabbitmq'); // Utilidad para publicar eventos
 
-// Prepara un cliente de Transbank (sandbox o live según env)
-const txClient = new Transaction(
-  transbank.commerceCode,
-  transbank.apiKey,
-  IntegrationType[transbank.integration]
-);
-
+// 2️⃣ — CONFIGURAR CLIENTE DE TRANSBANK (WebpayPlus)
+const txClient = new WebpayPlus.Transaction();
+console.log('✅ Cliente WebpayPlus.Transaction creado');
 
 // ——— 1. INICIAR PAGO ———
-// Recibe monto y crea un intent de pago en estado "initialized"
 exports.initPayment = async (req, res) => {
   try {
     const { amount } = req.body;
-    const id_user    = req.user.id_user;  // extraído en tu middleware JWT
+    const id_usuario = req.user.id_usuario;  // Extraído desde el JWT
 
-    // 1. Guarda el intent en tu BD
-    const intent = await PaymentIntent.create({
-      id_user,
-      amount,
-      status:   'initialized',
-      currency: 'CLP',
-      provider: 'transbank'
+    console.log('📥 Solicitud initPayment recibida:', { amount, id_usuario });
+
+    // 📝 — CREAR INTENTO DE PAGO EN LA BD
+    const intent = await IntentoPago.create({
+      id_usuario,
+      monto: amount,
+      estado: 'initialized',
+      moneda: 'CLP',
+      proveedor: 'transbank'
     });
 
-    // 2. Solicita a Transbank la transacción
-    const response = await txClient.initTransaction(
+    console.log('✅ Intento de pago creado en BD:', intent.id_intento);
+
+    // 📝 — INICIAR TRANSACCIÓN CON TRANSBANK
+    const response = await txClient.create(
+      `${intent.id_intento}`, // buyOrder
+      `${intent.id_intento}`, // sessionId
       amount,
-      `${intent.id_intent}`, // buyOrder
-      `${intent.id_intent}`, // sessionId
-      process.env.PAYMENT_RETURN_URL,  // https://tu-frontend/ok  medificar esto ya que 
-      process.env.PAYMENT_CANCEL_URL   // https://tu-frontend/fail
+      process.env.PAYMENT_RETURN_URL  // URL de éxito frontend
     );
 
-    // 3. Actualiza tu intent con token/URL
+    console.log('✅ Transacción iniciada en Transbank:', response);
+
+    // 📝 — GUARDAR TOKEN DE TRANSBANK EN LA BD
     intent.token_ws = response.token;
-    intent.url      = response.url;
     await intent.save();
 
-    // 4. Devuelve al cliente la URL de pago
+    console.log('✅ Token guardado en intento de pago:', response.token);
+
+    // ✅ — DEVOLVER AL CLIENTE LA URL PARA IR AL PORTAL DE PAGO
     res.json({ url: response.url, token: response.token });
+
   } catch (err) {
-    console.error('Error initPayment:', err);
+    console.error('❌ Error en initPayment:', err);
     res.status(500).json({ error: 'Error iniciando el pago' });
   }
 };
 
-
-
 // ——— 2. CONFIRMAR PAGO ———
-// Recibe el token_ws devuelto por Webpay y valida si el pago fue exitoso
-// —— 2) CONFIRMAR PAGO ——
 exports.confirmPayment = async (req, res) => {
   try {
     const { token_ws } = req.body;
 
-    // 1. Confirma con Transbank el status del pago
+    console.log('📥 Solicitud confirmPayment recibida:', { token_ws });
+
+    // 📝 — CONFIRMAR ESTADO DE LA TRANSACCIÓN CON TRANSBANK
     const result = await txClient.commit(token_ws);
 
-    // 2. Si no fue exitoso
+    console.log('✅ Resultado de commit Transbank:', result);
+
+    // 📝 — SI EL PAGO FUE RECHAZADO
     if (result.response_code !== 0) {
-      await PaymentIntent.update(
-        { status: 'failed' },
+      console.log('⚠ Pago rechazado con response_code:', result.response_code);
+
+      await IntentoPago.update(
+        { estado: 'failed' },
         { where: { token_ws } }
       );
       return res.status(400).json({ error: 'Pago no autorizado' });
     }
 
-    // 3. Marca el intent como success
-    const intent = await PaymentIntent.findOne({ where: { token_ws } });
-    intent.status = 'success';
+    // 📝 — MARCAR EL INTENTO COMO EXITOSO EN LA BD
+    const intent = await IntentoPago.findOne({ where: { token_ws } });
+    if (!intent) {
+      console.log('❌ Intento de pago no encontrado para token:', token_ws);
+      return res.status(404).json({ error: 'Intento de pago no encontrado' });
+    }
+
+    intent.estado = 'success';
     await intent.save();
 
-    // 4. Carga datos de usuario para el evento
-    const user = await UserStub.findByPk(intent.id_user);
+    console.log('✅ Intento de pago actualizado a success:', intent.id_intento);
 
-    // 5. Publica evento "pago.confirmado"
+    // 📝 — BUSCAR DATOS DEL USUARIO
+    const usuario = await Usuario.findByPk(intent.id_usuario);
+
+    console.log('✅ Usuario encontrado:', usuario.id_usuario, usuario.nombre);
+
+    // 📝 — PUBLICAR EVENTO EN RABBITMQ
     await publish('pago.confirmado', {
-      id_user: user.id_user,
-      nombre:  user.nombre,
-      monto:   intent.amount,
-      fecha:   new Date().toISOString(),
-      metodo:  intent.provider
+      id_usuario: usuario.id_usuario,
+      nombre: usuario.nombre,
+      monto: intent.monto,
+      fecha: new Date().toISOString(),
+      metodo: intent.proveedor
     });
 
-    res.json({ message: 'Pago confirmado con éxito', intent });
+    console.log('✅ Evento "pago.confirmado" publicado en RabbitMQ');
+
+    // ✅ — RESPUESTA AL CLIENTE
+    res.json({ message: 'Pago confirmado exitosamente', intent });
+
   } catch (err) {
-    console.error('Error confirmPayment:', err);
+    console.error('❌ Error en confirmPayment:', err);
     res.status(500).json({ error: 'Error confirmando el pago' });
   }
 };

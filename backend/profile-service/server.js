@@ -2,11 +2,22 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
+// 2️ Utilizo los helpers de Node para depurar rutas y archivos
+const fs = require('fs');
+const path = require('path');
+
+
 const { sequelize } = require('./config/DB');
+const models = require('./models');
+
+
 const { perfil: port } = require('./config/env').ports;
 
-// 1) Activar todas las asociaciones de modelos
-require('./models');
+// DEPURACIÓN: ¿de dónde arranco y qué hay en shared-models?
+console.log('— auth-service __dirname:', __dirname);
+console.log('— shared-models files:', fs.readdirSync(path.resolve(__dirname, './shared-models')));
+
+
 
 // 2) Importar rutas
 const perfilRoutes    = require('./routes/perfilRoutes');

@@ -1,4 +1,5 @@
 //   /backend/propiedades-service/models/Property.js
+/*
 const { DataTypes } = require('sequelize');
 const { sequelize } = require('../config/DB');
 const User = require('./UserStub');
@@ -22,3 +23,4 @@ UserStub.hasMany(Property, { foreignKey: 'id_user' });
 Property.belongsTo(UserStub, { foreignKey: 'id_user' });
 module.exports = Property;
 
+*/

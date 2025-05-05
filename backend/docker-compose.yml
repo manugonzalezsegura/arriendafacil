@@ -121,6 +121,22 @@ services:
       - ./shared-models:/app/shared-models:ro
 
 
+# 8) Profile Service
+  profile-service:
+    build:
+      context: ./profile-service
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT_PROFILE}:3004"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./shared-models:/app/shared-models:ro
+
 
 volumes:
   db_data:
