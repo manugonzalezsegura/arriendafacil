@@ -1,0 +1,142 @@
+# backend/docker-compose.yml
+version: '3.8'
+
+services:
+
+  # 1) Base de datos MySQL
+  db:
+    image: mysql:8.0
+    env_file:
+      - ./.env
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+      # (opcional) MYSQL_DATABASE: "${DB_NAME}"
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # 2) phpMyAdmin
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    env_file:
+      - ./.env
+    environment:
+      PMA_HOST: db
+      PMA_PORT: 3306
+    ports:
+      - "8080:80"
+    depends_on:
+      - db
+
+  # 3) RabbitMQ
+  rabbitmq:
+    image: rabbitmq:management
+    env_file:
+      - ./.env
+    environment:
+      RABBITMQ_DEFAULT_USER: "${RABBITMQ_USER}"
+      RABBITMQ_DEFAULT_PASS: "${RABBITMQ_PASS}"
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      timeout: 2s
+      retries: 10
+
+  # 4) Auth Service
+  auth-service:
+    build:
+      context: ./auth-service
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT_AUTH}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+    volumes:
+      - ./shared-models:/app/shared-models:ro
+
+
+
+  # 5) Properties Service
+  propiedades-service:
+    build:
+      context: ./propiedades-service
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT_PROP}:3001"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./shared-models:/app/shared-models:ro
+
+
+
+
+  # 6) Cooperative Service
+  cooperative-service:
+    build:
+      context: ./cooperative-service
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT_GROUP}:3002"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
+  # 7) Payment Service
+  pay-service:
+    build:
+      context: ./pay-service
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT_PAYMENT}:3003"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./shared-models:/app/shared-models:ro
+
+
+# 8) Profile Service
+  profile-service:
+    build:
+      context: ./profile-service
+    env_file:
+      - ./.env
+    ports:
+      - "${PORT_PROFILE}:3004"
+    depends_on:
+      db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    volumes:
+      - ./shared-models:/app/shared-models:ro
+
+
+volumes:
+  db_data:

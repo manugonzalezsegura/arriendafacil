@@ -1,0 +1,7 @@
+{
+  "name": "arriendofacil",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
