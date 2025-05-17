@@ -52,7 +52,7 @@ yarn-error.log
 !.vscode/extensions.json
 .history/*
 
-
+backend/auth-service/firebase/serviceAccountKey.json
 # Miscellaneous
 /.angular
 /.angular/cache
