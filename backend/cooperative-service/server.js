@@ -15,7 +15,7 @@ app.use(cors());
 app.use(express.json());
 
 // Sincronizar las tablas del servicio (en desarrollo se puede usar { force: true } - en producción, usar sync() sin forzar)
-sequelize.sync({ force: true })
+sequelize.sync({ force: false })
   .then(() => console.log('🔄 Cooperativa DB sincronizada (force: true)'))
   .catch(err => console.error('❌ Error al sincronizar la DB de cooperativa:', err));
 

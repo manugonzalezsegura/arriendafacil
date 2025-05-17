@@ -136,7 +136,15 @@ services:
         condition: service_healthy
     volumes:
       - ./shared-models:/app/shared-models:ro
-
+  ml-service:
+    build:
+      context: ./python-ml-service
+    container_name: python-ml-service
+    env_file:
+      - ./.env
+    ports:
+      - "3005:8000"
+    restart: unless-stopped
 
 volumes:
   db_data:

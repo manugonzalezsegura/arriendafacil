@@ -1,0 +1,119 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Panel de Postulaciones</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <mat-tab-group>
+
+    <!-- TAB 1: POSTULACIONES -->
+    <mat-tab label="Postulaciones">
+      <ion-item>
+        <ion-label>Ver:</ion-label>
+        <ion-select [(ngModel)]="vistaPostulaciones" interface="popover">
+          <ion-select-option value="recibidas">Recibidas</ion-select-option>
+          <ion-select-option value="enviadas">Mis postulaciones</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <ng-container *ngIf="vistaPostulaciones === 'recibidas'">
+        <ion-card *ngFor="let p of recibidas">
+          <ion-card-header>
+            <ion-card-title>{{ p.Usuario?.nombre || 'N/A' }}</ion-card-title>
+            <ion-card-subtitle>{{ p.Propiedad?.titulo || 'Propiedad desconocida' }}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <p><strong>Profesión:</strong> {{ p.PerfilInquilino?.profesion || '-' }}</p>
+            <p><strong>Sueldo:</strong> {{ p.PerfilInquilino?.sueldo | currency:'CLP' }}</p>
+            <p><strong>Score:</strong> {{ p.PerfilInquilino?.score ?? '-' }}</p>
+            <p><strong>Mensaje:</strong> {{ p.mensaje || '-' }}</p>
+            <p><strong>Estado:</strong> {{ p.estado }}</p>
+            <div *ngIf="p.estado === 'pendiente'">
+              <ion-button size="small" color="success" (click)="actualizarEstado(p, 'aceptada')">Aceptar</ion-button>
+              <ion-button size="small" color="danger" (click)="actualizarEstado(p, 'rechazada')">Rechazar</ion-button>
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ng-container>
+
+      <ng-container *ngIf="vistaPostulaciones === 'enviadas'">
+        <ion-card *ngFor="let p of enviadas">
+          <ion-card-header>
+            <ion-card-title>{{ p.Propiedad?.titulo }}</ion-card-title>
+            <ion-card-subtitle>{{ p.Propiedad?.direccion }}</ion-card-subtitle>
+          </ion-card-header>
+          <ion-card-content>
+            <p><strong>Precio:</strong> {{ p.Propiedad?.precio | currency:'CLP' }}</p>
+            <p><strong>Estado:</strong> {{ p.estado }}</p>
+            <p><strong>Mensaje:</strong> {{ p.mensaje || '-' }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ng-container>
+    </mat-tab>
+
+    <!-- TAB 2: PAGOS -->
+    <mat-tab label="Pagos">
+      <ion-item>
+        <ion-label>Ver:</ion-label>
+        <ion-select [(ngModel)]="verPagosRecibidos" (ionChange)="onTogglePagosRecibidos($event.detail.value)">
+          <ion-select-option [value]="false">Pagos Enviados</ion-select-option>
+          <ion-select-option [value]="true">Pagos Recibidos</ion-select-option>
+        </ion-select>
+      </ion-item>
+
+      <!-- 🔽 Si ver pagos enviados -->
+      <ng-container *ngIf="!verPagosRecibidos">
+        <ion-item>
+          <ion-label>Propiedad:</ion-label>
+          <ion-select placeholder="Selecciona propiedad" [(ngModel)]="idPostulacionSeleccionada" (ionChange)="onSeleccionarPostulacion($event.detail.value)">
+            <ion-select-option *ngFor="let prop of propiedadesPostuladas" [value]="prop.id_postulacion">
+              {{ prop.titulo }}
+            </ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ng-container *ngIf="pagosMensuales.length > 0; else sinPagos">
+          <ion-card *ngFor="let pago of pagosMensuales">
+            <ion-card-header>
+              <ion-card-title>Mes: {{ pago.mes | date:'MMMM yyyy' }}</ion-card-title>
+            </ion-card-header>
+            <ion-card-content>
+              <p><strong>Monto:</strong> {{ pago.monto | currency:'CLP' }}</p>
+              <p><strong>Estado:</strong> {{ pago.estado }}</p>
+              <p *ngIf="pago.fecha_pago"><strong>Fecha de pago:</strong> {{ pago.fecha_pago | date:'dd/MM/yyyy' }}</p>
+              <ion-button *ngIf="pago.estado === 'pendiente'" expand="block" color="success" (click)="pagarMes(pago)">
+                Pagar este mes
+              </ion-button>
+            </ion-card-content>
+          </ion-card>
+        </ng-container>
+
+        <ng-template #sinPagos>
+          <ion-text color="medium">Selecciona una propiedad para ver sus pagos.</ion-text>
+        </ng-template>
+      </ng-container>
+
+      <!-- 🔽 Si ver pagos recibidos -->
+      <ng-container *ngIf="verPagosRecibidos">
+        <ng-container *ngIf="pagosRecibidos.length > 0; else sinRecibidos">
+          <ion-card *ngFor="let grupo of pagosRecibidos">
+            <ion-card-header>
+              <ion-card-title>📦 Propiedad: {{ grupo.propiedad }}</ion-card-title>
+            </ion-card-header>
+            <ion-card-content *ngFor="let pago of grupo.pagos">
+              <p>👤 Inquilino: {{ pago.inquilino }}</p>
+              <p>📅 Mes: {{ pago.mes | date:'MMMM yyyy' }}</p>
+              <p>💰 Monto: {{ pago.monto | currency:'CLP' }}</p>
+              <p>🧾 Estado: {{ pago.estado }}</p>
+              <ion-item-divider></ion-item-divider>
+            </ion-card-content>
+          </ion-card>
+        </ng-container>
+        <ng-template #sinRecibidos>
+          <ion-text color="medium">No tienes pagos recibidos aún.</ion-text>
+        </ng-template>
+      </ng-container>
+    </mat-tab>
+  </mat-tab-group>
+</ion-content>

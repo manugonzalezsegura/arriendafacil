@@ -4,6 +4,7 @@ module.exports = (sequelize) => {
   return sequelize.define('IntentoPago', {
     id_intento:    { type: DataTypes.UUID, primaryKey: true, defaultValue: DataTypes.UUIDV4 },
     id_usuario:    { type: DataTypes.INTEGER, allowNull: false },
+    id_postulacion: { type: DataTypes.INTEGER, allowNull: false }, // NUEVO CAMPO
     monto:         { type: DataTypes.INTEGER, allowNull: false },
     moneda:        { type: DataTypes.STRING,  defaultValue: 'CLP' },
     proveedor:     { type: DataTypes.STRING,  defaultValue: 'transbank' },

@@ -20,7 +20,7 @@ module.exports = {
     refreshExpires: process.env.REFRESH_TOKEN_EXPIRATION
   },
   ports: {
-    auth: Number(process.env.PORT_PROFILE) || 3004
+    prof: Number(process.env.PORT_PROFILE) || 3004
   }
 };
 

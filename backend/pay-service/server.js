@@ -30,8 +30,8 @@ app.use(cors());
 app.use(express.json());
 
 // 1) Sincroniza tu BD de payment-service
-sequelize.sync({ force: true })
-  .then(() => console.log('🔄 Payment DB sincronizada (force: true)'))
+sequelize.sync({ force : false })
+  .then(() => console.log('🔄 Payment DB sincronizada'))
   .catch(err => console.error('❌ Error DB Payment:', err));
 
 // iniciamos rabbit

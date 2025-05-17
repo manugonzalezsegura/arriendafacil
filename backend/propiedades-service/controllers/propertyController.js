@@ -2,7 +2,7 @@
 
 // ① Importa el modelo correctamente inyectado
 //    shared-models exporta `Propiedad`, lo renombramos a `Property` si prefieres inglés
-const { Propiedad } = require('../models');
+const { Propiedad ,UsuarioRol, Rol} = require('../models');
 
 exports.createProperty = async (req, res) => {
   try {
@@ -23,6 +23,25 @@ exports.createProperty = async (req, res) => {
   }
 };
 
+
+
+
+// backend/propiedades-service/controllers/propertyController.js
+exports.getMisPropiedades = async (req, res) => {
+  try {
+    const id_usuario = req.user.id_usuario;
+    const props = await Propiedad.findAll({ where: { id_usuario } });
+    res.status(200).json(props);
+  } catch (error) {
+    console.error('❌ getMisPropiedades error:', error.message);
+    res.status(500).json({ message: 'Error al obtener propiedades del usuario' });
+  }
+};
+
+
+
+
+// deberia eliminarlo ?
 exports.getProperties = async (req, res) => {
   try {
     const props = await Propiedad.findAll({ where: { estado: 'disponible' } });
@@ -35,6 +54,7 @@ exports.getProperties = async (req, res) => {
 
 exports.getPropertyById = async (req, res) => {
   try {
+    console.log('🔍 ID recibido en getPropertyById:', req.params.id);
     const prop = await Propiedad.findByPk(req.params.id);
     if (!prop) return res.status(404).json({ message: 'No encontrada' });
     res.status(200).json(prop);
@@ -74,4 +94,85 @@ exports.deleteProperty = async (req, res) => {
     console.error('❌ deleteProperty error:', error.message);
     return res.status(500).json({ message: 'Error al eliminar', error: error.message });
   }
+};
+
+
+exports.filtrarPropiedades = async (req, res) => {
+  console.log('🟢 Inicia filtro de propiedades (solo precio máximo)');
+  try {
+    const { id_comuna, id_region, precio_max } = req.query;
+
+    // Importar modelos adicionales solo si no los tienes ya arriba
+    const { Propiedad, Comuna, Region } = require('../models');
+
+    const where = { estado: 'disponible' };
+
+    // Filtro por precio máximo solamente
+    if (precio_max) where.precio = { [Op.lte]: precio_max };
+
+    // Filtro por comuna
+    if (id_comuna) where.id_comuna = id_comuna;
+
+    // Construir include para region solo si hace falta
+    let include = [];
+    if (id_region) {
+      include.push({
+        model: Comuna,
+        where: { id_region },
+        include: [{ model: Region }]
+      });
+    } else {
+      include.push({ model: Comuna, include: [{ model: Region }] });
+    }
+
+    const propiedades = await Propiedad.findAll({ where, include });
+
+    console.log(`🟢 Propiedades encontradas: ${propiedades.length}`);
+    res.status(200).json(propiedades);
+
+  } catch (error) {
+    console.error('❌ Error en filtrarPropiedades:', error.message);
+    res.status(500).json({ message: 'Error al filtrar propiedades', error: error.message });
+  }
+};
+
+
+
+function generarPropiedadSchema() {
+  return {
+    title: 'Propiedad',
+    type: 'object',
+    properties: {
+      titulo: {
+        type: 'string',
+        minLength: 5,
+        title: 'Título de la Propiedad'
+      },
+      descripcion: {
+        type: 'string',
+        title: 'Descripción'
+      },
+      direccion: {
+        type: 'string',
+        title: 'Dirección'
+      },
+      precio: {
+        type: 'number',
+        minimum: 0,
+        title: 'Precio'
+      },
+      estado: {
+        type: 'string',
+        enum: ['disponible', 'arrendada', 'eliminada'],
+        title: 'Estado'
+      }
+    },
+    required: ['titulo', 'descripcion', 'direccion', 'precio']
+  };
+}
+
+
+exports.getPropiedadSchema = (req, res) => {
+  const schema = generarPropiedadSchema();
+  res.json(schema);
 };

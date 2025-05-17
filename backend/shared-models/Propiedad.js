@@ -4,6 +4,7 @@ module.exports = (sequelize) => {
   return sequelize.define('Propiedad', {
     id_propiedad: { type: DataTypes.INTEGER, primaryKey: true, autoIncrement: true },
     id_usuario:   { type: DataTypes.INTEGER,   allowNull: false },
+    id_comuna:    { type: DataTypes.INTEGER },
     titulo:       { type: DataTypes.STRING,    allowNull: false },
     descripcion:  { type: DataTypes.TEXT,      allowNull: false },
     direccion:    { type: DataTypes.STRING,    allowNull: false },

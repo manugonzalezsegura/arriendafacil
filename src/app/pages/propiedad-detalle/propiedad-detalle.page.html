@@ -1,0 +1,26 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Detalle de Propiedad</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content *ngIf="!cargando">
+
+  <ion-card>
+    <img *ngIf="propiedad.imagen_url" [src]="propiedad.imagen_url" />
+    <ion-card-header>
+      <ion-card-title>{{ propiedad.titulo }}</ion-card-title>
+      <ion-card-subtitle>{{ propiedad.direccion }}</ion-card-subtitle>
+    </ion-card-header>
+    <ion-card-content>
+      <p><strong>Comuna:</strong> {{ propiedad.comuna }}</p>
+      <p><strong>Región:</strong> {{ propiedad.region }}</p>
+      <p><strong>Precio:</strong> {{ propiedad.precio | currency:'CLP' }}</p>
+      <p><strong>Descripción:</strong></p>
+      <p>{{ propiedad.descripcion }}</p>
+
+      <ion-button expand="block" color="secondary" (click)="postular()">Postular</ion-button>
+    </ion-card-content>
+  </ion-card>
+
+</ion-content>

@@ -20,8 +20,9 @@ const models        = require('./models');  // ← lee /models/index.js y corre 
 
 
 
-
+const rolRoutes = require('./routes/rolRoutes');
 const authRoutes    = require('./routes/authRoutes');
+const adminRoutes = require('./routes/adminRoutes');
 const { initRabbit } = require('./utils/rabbitmq');
 const { ports }      = require('./config/env');  // ahora port sí vendrá definido
 
@@ -33,6 +34,7 @@ const { ports }      = require('./config/env');  // ahora port sí vendrá defin
 // DEPURACIÓN: ¿de dónde arranco y qué hay en shared-models?
 console.log('— auth-service __dirname:', __dirname);
 console.log('— shared-models files:', fs.readdirSync(path.resolve(__dirname, './shared-models')));
+console.log('🔑 JWT Secret (auth-service):', process.env.JWT_SECRET);
 
 // 3) Importo TODOS los modelos y relaciones definidas en shared-models/index.js
 
@@ -43,10 +45,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Sincronizar todas las tablas de este servicio (modo desarrollo)
-sequelize.sync({ force: true })
-  .then(() => console.log('🔄 Auth DB sincronizada (force: true)'))
-  .catch(err => console.error('❌ Error DB Auth:', err));
+// Sincronizar todas las tablas de este servicio (modo desarrollo)  alter: true  
+sequelize.sync({ alter: true  })
+  .then(() => {
+    console.log('✅ Tablas sincronizadas correctamente');
+    
+    app.listen(ports.auth, () => {
+      console.log(`🛡️  Auth Service escuchando en http://localhost:${ports.auth}`);
+    });
+
+
+  })
+  .catch(error => {
+    console.error('❌ Error al sincronizar tablas:', error);
+  });
+
 
 
   initRabbit().catch(err => {
@@ -57,11 +70,12 @@ sequelize.sync({ force: true })
 
 // Rutas de autenticación
 app.use('/api', authRoutes);
+app.use('/api/roles', rolRoutes);
+app.use('/api/admin', adminRoutes); 
+
 
   // Devuelve al cliente todos los headers que te llegan
 app.get('/debug-headers', (req, res) => {res.json(req.headers)});
 
 // Iniciar servidor
-app.listen(ports.auth, () => {
-  console.log(`🛡️  Auth Service escuchando en http://localhost:${ports.auth}`);
-});
+

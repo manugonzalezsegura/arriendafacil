@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from "../../services/auth.service";
-
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-login',
@@ -14,7 +14,7 @@ export class LoginPage implements OnInit {
   email: string = '';
   password: string = '';
 
-  constructor(private auth:AuthService) { }
+  constructor(private auth:AuthService,private router: Router) { }
 
 
   ngOnInit() {
@@ -32,7 +32,7 @@ export class LoginPage implements OnInit {
 
       if (usuario) {
         console.log('✅ Login exitoso:', usuario.uid);
-        // Redireccionar o mostrar mensaje de éxito
+        await this.router.navigate(['/perfil-general']);
       } else {
         console.log('❌ Error en el login');
       }

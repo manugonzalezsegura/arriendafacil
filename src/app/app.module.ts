@@ -1,9 +1,12 @@
+// src/app/app.module.ts
 import { CUSTOM_ELEMENTS_SCHEMA, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
+import { RouterModule } from '@angular/router'; // 👈 Añadir esto
+
 
 import { environment} from "../environments/environment";
 
@@ -12,22 +15,43 @@ import { provideAuth,getAuth } from '@angular/fire/auth'; // Auth service
 import { provideFirestore, getFirestore } from '@angular/fire/firestore';
 
 import { HttpClientModule, provideHttpClient } from '@angular/common/http'; 
+import { NavbarComponent } from './components/navbar/navbar.component';
+
+// para formularios 
+import { ReactiveFormsModule } from '@angular/forms';
+
+import { HTTP_INTERCEPTORS } from '@angular/common/http';
+import { AuthInterceptor } from './interceptors/auth.interceptor';
+
+
 
 
 
 @NgModule({
-  declarations: [AppComponent],
+  declarations: [
+    AppComponent,
+    NavbarComponent  // ✅ Correcto
+  ],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
     AppRoutingModule,
-    HttpClientModule // Se importa en imports para que HttpClient esté disponible en la app
+    HttpClientModule,
+    ReactiveFormsModule,
+    RouterModule, // 👈 Necesario para routerLink
+  ],
+  exports: [
+    NavbarComponent  // ✅ Necesario para usar <app-navbar>
   ],
   providers: [
-    // Coloca los proveedores de Firebase aquí según las instrucciones que sigues
     provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
     provideAuth(() => getAuth()),
-    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
+    { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptor,
+      multi: true
+    }
   ],
   bootstrap: [AppComponent],
   schemas: [CUSTOM_ELEMENTS_SCHEMA]

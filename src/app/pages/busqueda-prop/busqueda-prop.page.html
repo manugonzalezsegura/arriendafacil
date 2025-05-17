@@ -1,0 +1,53 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Filtrar Propiedades</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form (ngSubmit)="buscarPropiedades()">
+
+    <!-- Región -->
+    <ion-item>
+      <ion-label>Región</ion-label>
+      <ion-select [(ngModel)]="filtros.id_region" name="id_region" (ionChange)="onRegionChange($event)">
+        <ion-select-option *ngFor="let region of regiones" [value]="region.id_region">
+          {{ region.nombre }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Comuna -->
+    <ion-item>
+      <ion-label>Comuna</ion-label>
+      <ion-select [(ngModel)]="filtros.id_comuna" name="id_comuna" [disabled]="!comunas.length">
+        <ion-select-option *ngFor="let comuna of comunas" [value]="comuna.id_comuna">
+          {{ comuna.nombre }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Precio -->
+    <ion-item>
+      <ion-label position="floating">Precio Máximo</ion-label>
+      <ion-input type="number" [(ngModel)]="filtros.precio_max" name="precio_max"></ion-input>
+    </ion-item>
+
+    <ion-button expand="full" type="submit">Buscar Propiedades</ion-button>
+  </form>
+
+  <ion-list *ngIf="propiedades.length > 0">
+    <ion-card *ngFor="let propiedad of propiedades" (click)="verDetalle(propiedad.id_propiedad)">
+      <ion-card-header>
+        <ion-card-title>{{ propiedad.titulo }}</ion-card-title>
+        <ion-card-subtitle>${{ propiedad.precio }}</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <p>{{ propiedad.descripcion }}</p>
+        <p><strong>Dirección:</strong> {{ propiedad.direccion }}</p>
+        <p><strong>Comuna:</strong> {{ propiedad.Comuna?.nombre }}</p>
+        <p><strong>Región:</strong> {{ propiedad.Comuna?.Region?.nombre }}</p>
+      </ion-card-content>
+    </ion-card>
+  </ion-list>
+</ion-content>

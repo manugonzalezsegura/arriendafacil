@@ -1,0 +1,17 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Mis Propiedades</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <ion-list *ngIf="propiedades.length > 0">
+    <ion-item *ngFor="let prop of propiedades">
+      <ion-label>
+        <h2>{{ prop.titulo }}</h2>
+        <p>${{ prop.precio }}</p>
+      </ion-label>
+      <ion-button fill="clear" (click)="editarPropiedad(prop.id_propiedad)">Editar</ion-button>
+    </ion-item>
+  </ion-list>
+</ion-content>

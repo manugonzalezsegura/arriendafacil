@@ -1,0 +1,14 @@
+.perfil-card {
+    border-radius: 16px;
+    background-color: #3880ff; // 🎨 Cambia este color a lo que desees
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    margin: 10px;
+  }
+  
+  .btn-perfil {
+    --background: #3880ff;     // 🎨 Cambia el color de fondo del botón
+    --color: #fff;             // 🎨 Color del texto del botón
+    --border-radius: 12px;     // Bordes redondeados del botón
+    font-weight: 600;
+  }

@@ -1,9 +1,15 @@
 // backend/profile-service/routes/perfilRoutes.js
 const router = require('express').Router();
-const { getPerfil, updatePerfil } = require('../controllers/perfilController');
+const ctrl = require('../controllers/perfilController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
-router.get('/:usuarioId', authMiddleware, getPerfil);
-router.put('/:usuarioId', authMiddleware, updatePerfil);
+// GET perfil por ID
+router.get('/perfil-inquilino', authMiddleware, ctrl.getPerfil);
+
+// POST crear o actualizar perfil
+router.post('/perfil-inquilino', authMiddleware, ctrl.crearActualizarPerfil);
+
+// GET schema
+router.get('/perfil-inquilino/schema', authMiddleware, ctrl.getPerfilInquilinoSchema);
 
 module.exports = router;

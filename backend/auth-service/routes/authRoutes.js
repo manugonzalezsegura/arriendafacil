@@ -9,10 +9,8 @@ router.post('/login',    ctrl.login);
 router.post('/refresh',  ctrl.refresh);
 router.get('/profile',   verify, ctrl.getProfile);
 router.put('/updateUser',verify, ctrl.updateUser);
-
-
 router.post('/firebase-login', ctrl.firebaseLogin);
-
-
+// ruta para autogenerar formularios 
+router.get('/form-schema', ctrl.getRegisterFormSchema);
 
 module.exports = router;

@@ -1,18 +1,24 @@
 // /backend/auth-service/controllers/authController.js
 const { publish } = require('../utils/rabbitmq');
 const jwt = require('jsonwebtoken');
-// Importo el modelo Sequelize llamado "Usuario"
-const { Usuario } = require('../models');
+const admin = require('firebase-admin');
+const serviceAccount = require('../firebase/serviceAccountKey.json');
+const { Usuario, Rol, UsuarioRol, PerfilInquilino } = require('../models');
+
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount)
+  });
+}
 
 const {
   jwt: {
-    secret:        jwtSecret,
+    secret: jwtSecret,
     refreshSecret: jwtRefreshSecret,
-    expiresIn:     tokenExpiration,
-    refreshExpires:refreshTokenExpiration
+    expiresIn: tokenExpiration,
+    refreshExpires: refreshTokenExpiration
   }
-} =require('../config/env');
-
+} = require('../config/env');
 
 const generateAccessToken = usuario =>
   jwt.sign(
@@ -28,95 +34,95 @@ const generateRefreshToken = usuario =>
     { expiresIn: refreshTokenExpiration }
   );
 
+// 🚀 REGISTRO
+exports.register = async (req, res) => {
+  console.log('📥 register payload:', req.body);
+  const { email, nombre, telefono, uid } = req.body;
 
+  if (!email || !nombre || !uid) {
+    console.warn('⚠️ Faltan datos obligatorios');
+    return res.status(400).json({ message: 'Faltan datos: email, nombre y uid son requeridos' });
+  }
 
-  exports.register = async (req, res) => {
-    // 1) Loguea el body recibido para verificar qué datos envía el cliente
-    console.log('📥 register payload:', req.body);
-  
-    const { email, nombre, telefono, uid } = req.body;
-    if (!email || !nombre || !uid) {
-      console.warn('⚠️ Faltan datos en register');
-      return res.status(400).json({ message: 'Faltan datos: email, nombre y uid son requeridos' });
-    }
-  
-    try {
-      // 2) Usar correctamente el modelo Usuario (con U mayúscula)
-      const nuevoUsuario = await Usuario.create({ email, nombre, telefono, uid });
-      console.log('✅ Usuario creado:', { id: nuevoUsuario.id_usuario, email: nuevoUsuario.email });
-  
-      // 3) Genera y guarda tokens
-      const accessToken  = generateAccessToken(nuevoUsuario);
-      const refreshToken = generateRefreshToken(nuevoUsuario);
-      nuevoUsuario.refresh_token = refreshToken;
-      await nuevoUsuario.save();
-  
-      // 4) Publica evento en RabbitMQ
-      await publish('user.registered', {
-        id_usuario: nuevoUsuario.id_usuario,
-        nombre:     nuevoUsuario.nombre,
-        uid:        nuevoUsuario.uid
-      });
-      console.log('🐇 Evento user.registered publicado');
-  
-      // 5) Responde con los tokens
-      res.status(201).json({ accessToken, refreshToken });
-    } catch (error) {
-      // 6) Loguea error completo para depuración
-      console.error('❌ Error al registrar usuario:', error.message);
-      console.error(error.stack);
-  
-      // 7) Devuelve al cliente solo el mensaje de error
-      res.status(500).json({
-        message: 'Error al registrar usuario',
-        error:   error.message
-      });
-    }
-  };
+  try {
+    const nuevoUsuario = await Usuario.create({ email, nombre, telefono, uid });
+    const id_usuario = nuevoUsuario.id_usuario;
+    console.log('✅ Usuario creado con ID:', id_usuario);
 
+    await UsuarioRol.create({ id_usuario, id_rol: 2 });
+    console.log('✅ Rol inquilino asignado');
 
+    await PerfilInquilino.create({ id_usuario });
+    console.log('✅ PerfilInquilino creado');
 
+    const accessToken = generateAccessToken(nuevoUsuario);
+    const refreshToken = generateRefreshToken(nuevoUsuario);
+    console.log('✅ Tokens generados');
 
+    nuevoUsuario.refresh_token = refreshToken;
+    await nuevoUsuario.save();
+    console.log('✅ Refresh token guardado');
+
+    await publish('user.registered', {
+      id_usuario,
+      nombre: nuevoUsuario.nombre,
+      uid: nuevoUsuario.uid
+    });
+    console.log('📡 Evento user.registered publicado');
+
+    res.status(201).json({ accessToken, refreshToken });
+  } catch (error) {
+    console.error('❌ Error al registrar usuario:', error.message);
+    console.error(error.stack);
+    res.status(500).json({
+      message: 'Error al registrar usuario',
+      error: error.message
+    });
+  }
+};
+
+// 🔐 LOGIN
 exports.login = async (req, res) => {
+  console.log('📥 login payload:', req.body);
   const { email, uid } = req.body;
+
   if (!email || !uid) return res.status(400).json({ message: 'Faltan datos' });
 
   const usuario = await Usuario.findOne({ where: { email, uid } });
-
   if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
 
   const accessToken = generateAccessToken(usuario);
   const refreshToken = generateRefreshToken(usuario);
 
-  usuario.refreshToken = refreshToken; 
+  usuario.refresh_token = refreshToken;
   await usuario.save();
+  console.log('✅ Login exitoso - Tokens generados y guardados');
 
   res.status(200).json({ accessToken, refreshToken });
 };
 
+// 🔄 REFRESH TOKEN
 exports.refresh = async (req, res) => {
   console.log('📥 refresh payload:', req.body);
   const { refreshToken } = req.body;
+
   if (!refreshToken) {
     console.warn('⚠️ Falta refreshToken en body');
     return res.status(403).json({ message: 'Refresh Token requerido' });
   }
 
   try {
-    // 🚩 Busca en la columna correcta
     const usuario = await Usuario.findOne({ where: { refresh_token: refreshToken } });
-    console.log('🔍 Usuario con refresh_token:', usuario && usuario.toJSON());
+    console.log('🔍 Usuario encontrado para refresh_token:', usuario && usuario.toJSON());
 
-    if (!usuario) {
-      console.warn('⚠️ Refresh Token inválido');
-      return res.status(403).json({ message: 'Refresh Token inválido' });
-    }
+    if (!usuario) return res.status(403).json({ message: 'Refresh Token inválido' });
 
     jwt.verify(refreshToken, jwtRefreshSecret, (err) => {
       if (err) {
-        console.warn('⚠️ Refresh Token expirado o inválido:', err.message);
+        console.warn('⚠️ Token expirado o inválido:', err.message);
         return res.status(403).json({ message: 'Refresh Token expirado o inválido' });
       }
+
       const newAccessToken = generateAccessToken(usuario);
       console.log('🔄 Nuevo accessToken generado');
       res.status(200).json({ accessToken: newAccessToken });
@@ -124,30 +130,23 @@ exports.refresh = async (req, res) => {
   } catch (error) {
     console.error('❌ Error en refresh:', error.message);
     console.error(error.stack);
-    res.status(500).json({
-      message: 'Error en refresh token',
-      error:   error.message
-    });
+    res.status(500).json({ message: 'Error en refresh token', error: error.message });
   }
 };
 
-
+// 👤 PERFIL
 exports.getProfile = async (req, res) => {
-  // 3️⃣ Log headers y req.user
   console.log('📥 getProfile - headers:', req.headers);
-  console.log('📥 getProfile - req.user payload:', req.user);
+  console.log('📥 getProfile - req.user:', req.user);
 
   try {
-    const id = req.user && req.user.id_usuario;  // ajústalo si tu payload usa otro campo
-    console.log('🔍 getProfile - buscando usuario con id:', id);
+    const id = req.user && req.user.id_usuario;
+    console.log('🔍 Buscando usuario con id:', id);
 
     const usuario = await Usuario.findByPk(id);
-    console.log('🔍 getProfile - resultado Usuario.findByPk:', usuario && usuario.toJSON());
+    console.log('🔍 Usuario encontrado:', usuario && usuario.toJSON());
 
-    if (!usuario) {
-      console.warn('⚠️ getProfile - usuario no encontrado');
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
+    if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
 
     res.status(200).json({
       email: usuario.email,
@@ -155,77 +154,84 @@ exports.getProfile = async (req, res) => {
       telefono: usuario.telefono
     });
   } catch (error) {
-    console.error('❌ getProfile error:', error.message);
-    console.error(error.stack);
+    console.error('❌ Error en getProfile:', error.message);
     res.status(500).json({ message: 'Error al obtener perfil', error: error.message });
   }
 };
 
-
-
-
-
+// ✏️ ACTUALIZAR USUARIO
 exports.updateUser = async (req, res) => {
   const { nombre, email, telefono } = req.body;
-  const id = req.user.id_usuario;            // tu payload trae id_usuario
-  
-  // --- Aquí debes usar Usuario, NO User ---
+  const id = req.user.id_usuario;
+  console.log('📥 updateUser payload:', req.body);
+
   const usuario = await Usuario.findByPk(id);
   if (!usuario) return res.status(404).json({ message: 'Usuario no encontrado' });
 
   await usuario.update({ nombre, email, telefono });
+  console.log('✅ Usuario actualizado');
+
   return res.status(200).json({
     message: 'Usuario actualizado con éxito',
     usuario: {
       id_usuario: usuario.id_usuario,
-      nombre:     usuario.nombre,
-      email:      usuario.email,
-      telefono:   usuario.telefono
+      nombre: usuario.nombre,
+      email: usuario.email,
+      telefono: usuario.telefono
     }
   });
 };
 
-
-
-
-
-// 🔥 Ruta: POST /api/auth/firebase-login
+// 🔑 LOGIN CON FIREBASE
 exports.firebaseLogin = async (req, res) => {
   const { idToken } = req.body;
-
-  if (!idToken) {
-      return res.status(400).json({ message: 'Token de Firebase requerido' });
-  }
+  if (!idToken) return res.status(400).json({ message: 'Token de Firebase requerido' });
 
   try {
-      // 1️⃣ — Verificar el ID Token de Firebase
-      const decodedToken = await admin.auth().verifyIdToken(idToken);
-      const uid = decodedToken.uid;
+    const decodedToken = await admin.auth().verifyIdToken(idToken);
+    const uid = decodedToken.uid;
+    console.log('✅ Firebase ID token verificado, UID:', uid);
 
-      // 2️⃣ — Buscar o crear el usuario en tu BD
-      let usuario = await Usuario.findOne({ where: { uid } });
-      if (!usuario) {
-          // Si no existe, crea un usuario con UID y correo (si está en el token)
-          usuario = await Usuario.create({
-              uid,
-              correo: decodedToken.email || `sin-correo-${uid}@ejemplo.com`
-          });
-      }
-
-      // 3️⃣ — Generar tu JWT personalizado
-      const payload = {
-          id_usuario: usuario.id_usuario,
-          correo: usuario.correo
-      };
-
-      const token = jwt.sign(payload, jwtConfig.secret, {
-          expiresIn: jwtConfig.expiresIn || '1h'
+    let usuario = await Usuario.findOne({ where: { uid } });
+    if (!usuario) {
+      usuario = await Usuario.create({
+        uid,
+        email: decodedToken.email || `sin-correo-${uid}@ejemplo.com`,
+        nombre: 'sin-nombre'
       });
+      console.log('✅ Usuario creado desde Firebase:', usuario.toJSON());
+    }
 
-      res.json({ token });
+    const token = jwt.sign(
+      { id_usuario: usuario.id_usuario, email: usuario.email },
+      jwtSecret,
+      { expiresIn: tokenExpiration || '1h' }
+    );
 
+    res.json({ token });
   } catch (error) {
-      console.error('❌ Error verificando ID Token:', error);
-      res.status(401).json({ message: 'Token inválido o expirado' });
+    console.error('❌ Error verificando ID Token:', error.message);
+    res.status(401).json({ message: 'Token inválido o expirado' });
   }
+};
+
+// 🧱 FORM SCHEMA PARA FRONT
+function generarFormSchema() {
+  return {
+    title: 'Usuario',
+    type: 'object',
+    properties: {
+      nombre:   { type: 'string' },
+      email:    { type: 'string', format: 'email' },
+      telefono: { type: 'string' },
+      password: { type: 'string' }
+    },
+    required: ['nombre', 'email', 'password']
+  };
+}
+
+exports.getRegisterFormSchema = (req, res) => {
+  console.log('📤 Enviando schema de formulario de registro');
+  const schema = generarFormSchema();
+  res.json(schema);
 };

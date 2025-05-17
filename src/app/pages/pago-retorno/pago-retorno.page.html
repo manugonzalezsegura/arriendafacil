@@ -1,0 +1,20 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Confirmando pago...</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding" *ngIf="estado === 'cargando'">
+  <ion-spinner name="crescent"></ion-spinner>
+  <p>Confirmando con Transbank...</p>
+</ion-content>
+
+<ion-content class="ion-padding" *ngIf="estado === 'exito'">
+  <ion-icon name="checkmark-circle-outline" color="success" size="large"></ion-icon>
+  <h2>✅ Pago confirmado con éxito</h2>
+</ion-content>
+
+<ion-content class="ion-padding" *ngIf="estado === 'error'">
+  <ion-icon name="close-circle-outline" color="danger" size="large"></ion-icon>
+  <h2>❌ Hubo un problema al confirmar el pago</h2>
+</ion-content>
