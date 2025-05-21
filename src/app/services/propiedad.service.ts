@@ -101,6 +101,16 @@ export class PropiedadService {
 
   getPropiedadById(id: number): Observable<any> {
   return this.http.get(`http://localhost:3001/api/propiedad/${id}`);
+  }
+
+  //crear propiedad
+  obtenerSchemaCrear() {
+  return this.http.get('/api/propiedades/schema');
+  }
+
+crearPropiedad(data: any) {
+  return this.http.post('/api/propiedades', data);
 }
+
 
 }

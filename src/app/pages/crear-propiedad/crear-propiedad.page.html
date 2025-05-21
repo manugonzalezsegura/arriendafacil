@@ -1,0 +1,67 @@
+<ion-header>
+  <ion-toolbar>
+    <ion-title>Crear Propiedad</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <form (ngSubmit)="crearPropiedad()">
+
+    <!-- Título -->
+    <ion-item>
+      <ion-label position="floating">Título</ion-label>
+      <ion-input [(ngModel)]="propiedad.titulo" name="titulo" required></ion-input>
+    </ion-item>
+
+    <!-- Descripción -->
+    <ion-item>
+      <ion-label position="floating">Descripción</ion-label>
+      <ion-textarea [(ngModel)]="propiedad.descripcion" name="descripcion" required></ion-textarea>
+    </ion-item>
+
+    <!-- Dirección -->
+    <ion-item>
+      <ion-label position="floating">Dirección</ion-label>
+      <ion-input [(ngModel)]="propiedad.direccion" name="direccion" required></ion-input>
+    </ion-item>
+
+    <!-- Precio -->
+    <ion-item>
+      <ion-label position="floating">Precio</ion-label>
+      <ion-input type="number" [(ngModel)]="propiedad.precio" name="precio" required></ion-input>
+    </ion-item>
+
+    <!-- Tipo de Propiedad -->
+    <ion-item>
+      <ion-label>Tipo</ion-label>
+      <ion-select [(ngModel)]="propiedad.tipo_propiedad" name="tipo_propiedad" required>
+        <ion-select-option value="casa">Casa</ion-select-option>
+        <ion-select-option value="departamento">Departamento</ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Región -->
+    <ion-item>
+      <ion-label>Región</ion-label>
+      <ion-select [(ngModel)]="id_region" name="id_region" (ionChange)="onRegionChange($event)" required>
+        <ion-select-option *ngFor="let region of regiones" [value]="region.id_region">
+          {{ region.nombre }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <!-- Comuna -->
+    <ion-item>
+      <ion-label>Comuna</ion-label>
+      <ion-select [(ngModel)]="propiedad.id_comuna" name="id_comuna" [disabled]="!comunas.length" required>
+        <ion-select-option *ngFor="let comuna of comunas" [value]="comuna.id_comuna">
+          {{ comuna.nombre }}
+        </ion-select-option>
+      </ion-select>
+    </ion-item>
+
+    <ion-button expand="full" type="submit" class="ion-margin-top">
+      {{ modoEdicion ? 'Actualizar Propiedad' : 'Crear Propiedad' }}
+    </ion-button>
+  </form>
+</ion-content>

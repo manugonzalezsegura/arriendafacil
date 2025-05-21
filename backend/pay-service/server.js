@@ -6,6 +6,7 @@ const cors    = require('cors');
 // 2️ Utilizo los helpers de Node para depurar rutas y archivos
 const fs = require('fs');
 const path = require('path');
+const listEndpoints = require('express-list-endpoints');
 
 
 
@@ -15,6 +16,8 @@ const models = require('./models');
 
 
 const paymentRoutes = require('./routes/payment.routes');
+const adminPaymentRoutes = require('./routes/adminRoutes');
+const { listarRutas } = require('./utils/listarRutas');
 const { ports } = require('./config/env');
 //const {start: startUserEvents  } = require('./eventos/coopEvent')
 
@@ -38,8 +41,13 @@ sequelize.sync({ force : false })
 //startUserEvents().catch(err =>console.error('❌ Error en suscriptor coopEvents:', err));
 // 3) Monta tus rutas de pago
 app.use('/api/payments', paymentRoutes);
+app.use('/api/admin', adminPaymentRoutes);
 
 // 4) Inicia el servidor
 app.listen(ports.pay, () => {
   console.log(`💳 Payment Service escuchando en http://localhost:${ports.pay}`);
+  console.log('\n📋 RUTAS REGISTRADAS EN PAYMENT-SERVICE:\n');
+  [...listarRutas(paymentRoutes, '/api/payments'), ...listarRutas(adminPaymentRoutes, '/api/admin')].forEach(r =>
+    console.log(`🔹 [${r.methods.join(', ')}] ${r.path}`)
+  );
 });

@@ -70,6 +70,14 @@ const routes: Routes = [
   path: 'pago/cancelado',
   loadChildren: () => import('./pages/pago-cancelado/pago-cancelado.module').then( m => m.PagoCanceladoPageModule)
   },
+  {
+    path: 'crear-propiedad',
+    loadChildren: () => import('./pages/crear-propiedad/crear-propiedad.module').then( m => m.CrearPropiedadPageModule)
+  },
+    {
+    path: 'crear-propiedad/:id',
+    loadChildren: () => import('./pages/crear-propiedad/crear-propiedad.module').then( m => m.CrearPropiedadPageModule)
+  },
 ];
 
 @NgModule({

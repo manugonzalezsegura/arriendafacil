@@ -15,7 +15,13 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTabsModule } from '@angular/material/tabs'; // 👈 ESTE
 import { MatButtonModule } from '@angular/material/button'; // 👈 ESTE también
+import { MatIconModule } from '@angular/material/icon'; // <-- 👈 Importa esto
+import { MatSelectModule } from '@angular/material/select';
+import { MatOptionModule } from '@angular/material/core';
+import { CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import { MatDialogModule } from '@angular/material/dialog';
 
+import { CrearAdminComponent } from 'src/app/components/crear-admin/crear-admin.component';
 
 
 
@@ -32,7 +38,12 @@ import { MatButtonModule } from '@angular/material/button'; // 👈 ESTE tambié
     MatInputModule,
     MatTabsModule,
     MatButtonModule,
+    MatIconModule,
+    MatSelectModule,
+    MatOptionModule,
+    MatDialogModule
   ],
-  declarations: [AdminPanelPage]
+  declarations: [AdminPanelPage,CrearAdminComponent],
+    schemas: [CUSTOM_ELEMENTS_SCHEMA]
 })
 export class AdminPanelPageModule {}

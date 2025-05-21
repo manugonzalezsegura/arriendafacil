@@ -6,86 +6,144 @@
 
 <ion-content>
   <div style="padding: 16px;">
-    <mat-tab-group>
-      
-      <!-- TAB 1: ESTADÍSTICAS ML -->
-      <mat-tab label="Estadísticas">
-        <mat-form-field appearance="outline" style="width: 100%; margin-top: 16px;">
-          <mat-label>Buscar</mat-label>
-          <input matInput (keyup)="applyFilter($event)" placeholder="Buscar por profesión...">
-        </mat-form-field>
 
-        <table mat-table [dataSource]="dataSource" matSort class="mat-elevation-z8" style="width: 100%; margin-top: 16px;">
+    <!-- Desplegable -->
+    <mat-form-field appearance="outline" style="width: 100%; margin-bottom: 12px;">
+      <mat-label>Seleccionar vista</mat-label>
+      <mat-select [(value)]="vistaSeleccionada" (selectionChange)="cargarVistaSeleccionada()">
+        <mat-option value="usuarios">Usuarios</mat-option>
+        <mat-option value="propiedades">Propiedades</mat-option>
+        <mat-option value="pagos">Pagos</mat-option>
+      </mat-select>
+    </mat-form-field>
 
-          <ng-container matColumnDef="profesion">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Profesión </th>
-            <td mat-cell *matCellDef="let element"> {{element.profesion}} </td>
-          </ng-container>
+    <!-- Buscador individual -->
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>Buscar</mat-label>
+      <input matInput *ngIf="vistaSeleccionada === 'usuarios'" (keyup)="applyUsuariosFilter($event)" placeholder="Buscar por nombre, email o teléfono">
+      <input matInput *ngIf="vistaSeleccionada === 'propiedades'" (keyup)="applyPropiedadesFilter($event)" placeholder="Buscar por título, dirección o estado">
+      <input matInput *ngIf="vistaSeleccionada === 'pagos'" (keyup)="applyPagosFilter($event)" placeholder="Buscar por estado, mes o monto">
+    </mat-form-field>
 
-          <ng-container matColumnDef="promedio_score">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Score </th>
-            <td mat-cell *matCellDef="let element"> {{element.promedio_score}} </td>
-          </ng-container>
+    <!-- Tabla Usuarios -->
+    <div *ngIf="vistaSeleccionada === 'usuarios'" style="overflow-x: auto; background: white; border-radius: 8px; padding: 12px;">
+      <table mat-table [dataSource]="usuariosDataSource" class="mat-elevation-z8" style="min-width: 700px;">
+        <ng-container matColumnDef="id_usuario">
+          <th mat-header-cell *matHeaderCellDef> ID </th>
+          <td mat-cell *matCellDef="let user"> {{ user.id_usuario }} </td>
+        </ng-container>
+        <ng-container matColumnDef="nombre">
+          <th mat-header-cell *matHeaderCellDef> Nombre </th>
+          <td mat-cell *matCellDef="let user"> {{ user.nombre }} </td>
+        </ng-container>
+        <ng-container matColumnDef="email">
+          <th mat-header-cell *matHeaderCellDef> Email </th>
+          <td mat-cell *matCellDef="let user"> {{ user.email }} </td>
+        </ng-container>
+        <ng-container matColumnDef="telefono">
+          <th mat-header-cell *matHeaderCellDef> Teléfono </th>
+          <td mat-cell *matCellDef="let user"> {{ user.telefono }} </td>
+        </ng-container>
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef> Estado </th>
+          <td mat-cell *matCellDef="let user">
+            <span [ngClass]="user.esta_activo ? 'text-green' : 'text-red'">
+              {{ user.esta_activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+        </ng-container>
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef> Acciones </th>
+          <td mat-cell *matCellDef="let user">
+            <button mat-icon-button color="primary" (click)="abrirDialogoEditar(user)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button color="warn" (click)="cambiarEstadoUsuario(user)">
+              <mat-icon>{{ user.esta_activo ? 'person_off' : 'person' }}</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="usuariosDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: usuariosDisplayedColumns;"></tr>
+      </table>
+    </div>
 
-          <ng-container matColumnDef="promedio_puntualidad">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header> Puntualidad </th>
-            <td mat-cell *matCellDef="let element"> {{element.promedio_puntualidad}} </td>
-          </ng-container>
+    <!-- Tabla Propiedades -->
+    <div *ngIf="vistaSeleccionada === 'propiedades'" style="overflow-x: auto; background: white; border-radius: 8px; padding: 12px;">
+      <table mat-table [dataSource]="propiedadesDataSource" class="mat-elevation-z8" style="min-width: 700px;">
+        <ng-container matColumnDef="id_propiedad">
+          <th mat-header-cell *matHeaderCellDef> ID </th>
+          <td mat-cell *matCellDef="let p"> {{ p.id_propiedad }} </td>
+        </ng-container>
+        <ng-container matColumnDef="titulo">
+          <th mat-header-cell *matHeaderCellDef> Título </th>
+          <td mat-cell *matCellDef="let p"> {{ p.titulo }} </td>
+        </ng-container>
+        <ng-container matColumnDef="direccion">
+          <th mat-header-cell *matHeaderCellDef> Dirección </th>
+          <td mat-cell *matCellDef="let p"> {{ p.direccion }} </td>
+        </ng-container>
+        <ng-container matColumnDef="precio">
+          <th mat-header-cell *matHeaderCellDef> Precio </th>
+          <td mat-cell *matCellDef="let p"> {{ p.precio }} </td>
+        </ng-container>
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef> Estado </th>
+          <td mat-cell *matCellDef="let p"> {{ p.estado }} </td>
+        </ng-container>
+        <ng-container matColumnDef="id_usuario">
+          <th mat-header-cell *matHeaderCellDef> Usuario </th>
+          <td mat-cell *matCellDef="let p"> {{ p.id_usuario }} </td>
+        </ng-container>
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef> Acciones </th>
+          <td mat-cell *matCellDef="let p">
+            <button mat-icon-button color="primary" (click)="abrirDialogoEditar(p)">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="propiedadesDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: propiedadesDisplayedColumns;"></tr>
+      </table>
+    </div>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-        </table>
+    <!-- Tabla Pagos -->
+    <div *ngIf="vistaSeleccionada === 'pagos'" style="overflow-x: auto; background: white; border-radius: 8px; padding: 12px;">
+      <table mat-table [dataSource]="pagosDataSource" class="mat-elevation-z8" style="min-width: 700px;">
+        <ng-container matColumnDef="id_pago_mensual">
+          <th mat-header-cell *matHeaderCellDef> ID </th>
+          <td mat-cell *matCellDef="let pago"> {{ pago.id_pago_mensual }} </td>
+        </ng-container>
+        <ng-container matColumnDef="mes">
+          <th mat-header-cell *matHeaderCellDef> Mes </th>
+          <td mat-cell *matCellDef="let pago"> {{ pago.mes }} </td>
+        </ng-container>
+        <ng-container matColumnDef="monto">
+          <th mat-header-cell *matHeaderCellDef> Monto </th>
+          <td mat-cell *matCellDef="let pago"> {{ pago.monto }} </td>
+        </ng-container>
+        <ng-container matColumnDef="pagado">
+          <th mat-header-cell *matHeaderCellDef> Pagado </th>
+          <td mat-cell *matCellDef="let pago"> {{ pago.pagado ? 'Sí' : 'No' }} </td>
+        </ng-container>
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef> Estado </th>
+          <td mat-cell *matCellDef="let pago"> {{ pago.estado }} </td>
+        </ng-container>
+        <ng-container matColumnDef="fecha_pago">
+          <th mat-header-cell *matHeaderCellDef> Fecha Pago </th>
+          <td mat-cell *matCellDef="let pago"> {{ pago.fecha_pago }} </td>
+        </ng-container>
+        <tr mat-header-row *matHeaderRowDef="pagosDisplayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: pagosDisplayedColumns;"></tr>
+      </table>
+    </div>
 
-        <mat-paginator [pageSize]="5" [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons></mat-paginator>
-      </mat-tab>
-
-      <!-- TAB 2: GESTIÓN DE USUARIOS -->
-      <mat-tab label="Usuarios">
-        <mat-table [dataSource]="usuariosDataSource" class="mat-elevation-z8" style="width: 100%; margin-top: 16px;">
-          
-          <ng-container matColumnDef="id_usuario">
-            <th mat-header-cell *matHeaderCellDef> ID </th>
-            <td mat-cell *matCellDef="let user"> {{user.id_usuario}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="nombre">
-            <th mat-header-cell *matHeaderCellDef> Nombre </th>
-            <td mat-cell *matCellDef="let user"> {{user.nombre}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="email">
-            <th mat-header-cell *matHeaderCellDef> Email </th>
-            <td mat-cell *matCellDef="let user"> {{user.email}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="telefono">
-            <th mat-header-cell *matHeaderCellDef> Teléfono </th>
-            <td mat-cell *matCellDef="let user"> {{user.telefono}} </td>
-          </ng-container>
-
-          <ng-container matColumnDef="estado">
-            <th mat-header-cell *matHeaderCellDef> Estado </th>
-            <td mat-cell *matCellDef="let user">
-              <span [ngClass]="user.esta_activo ? 'text-green' : 'text-red'">
-                {{ user.esta_activo ? 'Activo' : 'Inactivo' }}
-              </span>
-            </td>
-          </ng-container>
-
-          <ng-container matColumnDef="acciones">
-            <th mat-header-cell *matHeaderCellDef> Acciones </th>
-            <td mat-cell *matCellDef="let user">
-              <button mat-button color="warn" (click)="eliminarUsuario(user.id_usuario)" [disabled]="!user.esta_activo">
-                Eliminar
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="usuariosDisplayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: usuariosDisplayedColumns;"></tr>
-        </mat-table>
-      </mat-tab>
-
-    </mat-tab-group>
   </div>
+    <ion-fab vertical="bottom" horizontal="end" slot="fixed" *ngIf="vistaSeleccionada === 'usuarios'">
+    <ion-fab-button (click)="abrirDialogoCrearAdmin()">
+      <ion-icon name="person-add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 </ion-content>

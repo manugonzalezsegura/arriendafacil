@@ -24,7 +24,9 @@ export class MisPropiedadesPage implements OnInit {
   }
 
   editarPropiedad(id: number) {
-    this.router.navigate(['/propiedad', id]);
+    this.router.navigate(['/crear-propiedad', id]);
   }
+
+  
 
 }

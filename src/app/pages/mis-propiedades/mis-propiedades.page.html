@@ -14,4 +14,12 @@
       <ion-button fill="clear" (click)="editarPropiedad(prop.id_propiedad)">Editar</ion-button>
     </ion-item>
   </ion-list>
+
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+  <ion-fab-button color="primary" [routerLink]="['/crear-propiedad']">
+    <ion-icon name="home-outline"></ion-icon>
+    <ion-icon name="add" slot="end"></ion-icon>
+  </ion-fab-button>
+</ion-fab>
+
 </ion-content>

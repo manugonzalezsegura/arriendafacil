@@ -3,6 +3,7 @@
 require('dotenv').config();
 const express = require('express');
 const cors    = require('cors');
+const listEndpoints = require('express-list-endpoints'); // ✅ importar
 
 // 2️ Utilizo los helpers de Node para depurar rutas y archivos
 const fs = require('fs');
@@ -24,6 +25,7 @@ const rolRoutes = require('./routes/rolRoutes');
 const authRoutes    = require('./routes/authRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const { initRabbit } = require('./utils/rabbitmq');
+const { listarRutas } = require('./utils/listarRutas');
 const { ports }      = require('./config/env');  // ahora port sí vendrá definido
 
 
@@ -45,33 +47,57 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Sincronizar todas las tablas de este servicio (modo desarrollo)  alter: true  
-sequelize.sync({ alter: true  })
-  .then(() => {
-    console.log('✅ Tablas sincronizadas correctamente');
-    
-    app.listen(ports.auth, () => {
-      console.log(`🛡️  Auth Service escuchando en http://localhost:${ports.auth}`);
-    });
 
 
-  })
-  .catch(error => {
-    console.error('❌ Error al sincronizar tablas:', error);
-  });
-
-
-
-  initRabbit().catch(err => {
-    console.error('❌ Auth Service: no pude conectar RabbitMQ', err);
-    process.exit(1);
-  });
-
-
-// Rutas de autenticación
+app.get('/api/test', (req, res) => res.send('✅ Ruta de prueba activa'));
 app.use('/api', authRoutes);
 app.use('/api/roles', rolRoutes);
 app.use('/api/admin', adminRoutes); 
+
+
+app.get('/api/debug/rutas', (req, res) => {
+  const rutas = [
+    ...listarRutas(authRoutes, '/api'),
+    ...listarRutas(rolRoutes, '/api/roles'),
+    ...listarRutas(adminRoutes, '/api/admin'),
+  ];
+  res.json(rutas);
+});
+
+// Devuelve headers para debug
+app.get('/debug-headers', (req, res) => {
+  res.json(req.headers);
+});
+
+// 🛠️ Sincronización y servidor
+// Sincronizar y levantar server
+sequelize.sync({ alter: true }).then(() => {
+  console.log('✅ Tablas sincronizadas correctamente');
+
+  initRabbit().then(() => {
+    app.listen(ports.auth, () => {
+      console.log(`🛡️  Auth Service escuchando en http://localhost:${ports.auth}`);
+
+      // Mostrar rutas en consola
+      const rutas = [
+        ...listarRutas(authRoutes, '/api'),
+        ...listarRutas(rolRoutes, '/api/roles'),
+        ...listarRutas(adminRoutes, '/api/admin'),
+      ];
+
+      console.log('\n📋 RUTAS REGISTRADAS EN AUTH-SERVICE:\n');
+      rutas.forEach(r => {
+        console.log(`🔹 [${r.methods.join(', ')}] ${r.path}`);
+      });
+      console.log('\n');
+    });
+  });
+});
+
+
+// Rutas de autenticación
+
+
 
 
   // Devuelve al cliente todos los headers que te llegan

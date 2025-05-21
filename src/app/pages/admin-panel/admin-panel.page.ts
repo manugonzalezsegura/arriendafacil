@@ -4,12 +4,13 @@ import { MatTableDataSource } from '@angular/material/table';
 import { MatPaginator } from '@angular/material/paginator';
 import { MatSort } from '@angular/material/sort';
 import { Estadistica } from 'src/app/interfaces/estadistica.interface';
-
-
-
-
+import { MatDialog } from '@angular/material/dialog';
+import { EditarUsuarioDialogComponent } from 'src/app/components/editar-usuario-dialog/editar-usuario-dialog.component';
 import { Usuario } from 'src/app/interfaces/usuario.interface';
 
+import { Propiedad } from 'src/app/interfaces/propiedad.interface';
+import { PagoMensual } from 'src/app/interfaces/pago-mensual.interface';
+import { CrearAdminComponent } from 'src/app/components/crear-admin/crear-admin.component';
 
 
 @Component({
@@ -18,24 +19,36 @@ import { Usuario } from 'src/app/interfaces/usuario.interface';
   styleUrls: ['./admin-panel.page.scss'],
   standalone: false,
 })
-export class AdminPanelPage implements OnInit, AfterViewInit {
+export class AdminPanelPage implements OnInit, AfterViewInit { // TAB CONTROL
+  vistaSeleccionada: 'usuarios' | 'propiedades' | 'pagos' | 'estadisticas' = 'usuarios';
 
- // 📊 Estadísticas ML
+  // ESTADISTICAS
   displayedColumns: string[] = ['profesion', 'promedio_score', 'promedio_puntualidad'];
   dataSource = new MatTableDataSource<Estadistica>();
 
-  // 👥 Usuarios
+  // USUARIOS
   usuariosDisplayedColumns: string[] = ['id_usuario', 'nombre', 'email', 'telefono', 'estado', 'acciones'];
   usuariosDataSource = new MatTableDataSource<Usuario>();
+
+  // PROPIEDADES
+  propiedadesDisplayedColumns: string[] = ['id_propiedad', 'titulo', 'direccion', 'precio', 'estado', 'id_usuario', 'acciones'];
+  propiedadesDataSource = new MatTableDataSource<Propiedad>();
+
+  // PAGOS
+  pagosDisplayedColumns: string[] = ['id_pago_mensual', 'mes', 'monto', 'pagado', 'estado', 'fecha_pago'];
+  pagosDataSource = new MatTableDataSource<PagoMensual>();
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private adminService: AdminService) {}
+  constructor(private adminService: AdminService, private dialog: MatDialog) {}
 
   ngOnInit(): void {
     this.cargarEstadisticas();
     this.cargarUsuarios();
+    this.cargarPropiedades();
+    this.cargarVistaSeleccionada();
+    this.cargarPagos(); 
   }
 
   ngAfterViewInit(): void {
@@ -43,46 +56,112 @@ export class AdminPanelPage implements OnInit, AfterViewInit {
     this.dataSource.sort = this.sort;
   }
 
-  // 📊 Obtener estadísticas ML (ahora con Observable)
+    // 👉 Desplegable
+  cargarVistaSeleccionada(): void {
+    if (this.vistaSeleccionada === 'usuarios') {
+      this.cargarUsuarios();
+    } else if (this.vistaSeleccionada === 'propiedades') {
+      this.cargarPropiedades();
+    } else if (this.vistaSeleccionada === 'pagos') {
+      this.cargarPagos();
+    }
+  }
+
+  // Estadísticas
   cargarEstadisticas(): void {
     this.adminService.obtenerEstadisticasAdmin().subscribe({
-      next: (data) => {
-        console.log("📊 Estadísticas ML:", data);
-        this.dataSource.data = data;
-      },
-      error: (err) => console.error("❌ Error al cargar estadísticas", err)
+      next: data => this.dataSource.data = data,
+      error: err => console.error('❌ Error al cargar estadísticas:', err)
     });
   }
 
-  // 👥 Obtener todos los usuarios
+  // Usuarios
   cargarUsuarios(): void {
     this.adminService.getUsuarios().subscribe({
-      next: (res) => {
-        console.log("👥 Usuarios cargados:", res);
-        this.usuariosDataSource.data = res;
-      },
-      error: (err) => console.error("❌ Error al cargar usuarios", err)
+      next: usuarios => this.usuariosDataSource.data = usuarios,
+      error: err => console.error('❌ Error al cargar usuarios:', err)
     });
   }
 
-  // 🔍 Filtro en estadísticas
-  applyFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value.trim().toLowerCase();
-    this.dataSource.filter = filterValue;
+  applyUsuariosFilter(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.usuariosDataSource.filterPredicate = (data: Usuario, filter: string) => {
+      return data.nombre.toLowerCase().includes(filter) ||
+             data.email.toLowerCase().includes(filter) ||
+             data.telefono?.toLowerCase().includes(filter);
+    };
+    this.usuariosDataSource.filter = value;
   }
 
-  // 🗑️ Eliminar (soft delete)
-  eliminarUsuario(id: number): void {
-    if (!confirm('¿Estás seguro de que deseas desactivar este usuario?')) return;
-
-    this.adminService.deleteUsuario(id).subscribe({
-      next: () => {
-        console.log(`✅ Usuario ID ${id} desactivado`);
-        this.cargarUsuarios(); // Actualizar la tabla
-      },
-      error: (err) => console.error(`❌ Error al desactivar usuario ID ${id}`, err)
+  cambiarEstadoUsuario(usuario: Usuario): void {
+    const nuevoEstado = !usuario.esta_activo;
+    this.adminService.actualizarUsuario(usuario.id_usuario, { esta_activo: nuevoEstado }).subscribe({
+      next: () => this.cargarUsuarios(),
+      error: err => console.error('❌ Error al cambiar estado de usuario:', err)
     });
   }
 
+  abrirDialogoEditar(usuario: Usuario): void {
+    const dialogRef = this.dialog.open(EditarUsuarioDialogComponent, {
+      width: '400px',
+      data: { ...usuario }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        this.adminService.actualizarUsuario(usuario.id_usuario, result).subscribe({
+          next: () => this.cargarUsuarios(),
+          error: err => console.error('❌ Error al actualizar usuario:', err)
+        });
+      }
+    });
+  }
+
+  // Propiedades
+  cargarPropiedades(): void {
+    this.adminService.getPropiedades().subscribe({
+      next: propiedades => this.propiedadesDataSource.data = propiedades,
+      error: err => console.error('❌ Error al cargar propiedades:', err)
+    });
+  }
+
+  applyPropiedadesFilter(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.propiedadesDataSource.filterPredicate = (data: Propiedad, filter: string) =>
+      data.titulo.toLowerCase().includes(filter) ||
+      data.direccion.toLowerCase().includes(filter) ||
+      data.estado.toLowerCase().includes(filter);
+    this.propiedadesDataSource.filter = value;
+  }
+
+  // Pagos
+  cargarPagos(): void {
+    this.adminService.getPagos().subscribe({
+      next: pagos => this.pagosDataSource.data = pagos,
+      error: err => console.error('❌ Error al cargar pagos:', err)
+    });
+  }
+
+  applyPagosFilter(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.trim().toLowerCase();
+    this.pagosDataSource.filterPredicate = (data: PagoMensual, filter: string) =>
+      data.estado.toLowerCase().includes(filter) ||
+      data.mes.toLowerCase().includes(filter) ||
+      String(data.monto).includes(filter);
+    this.pagosDataSource.filter = value;
+  }
+
+abrirDialogoCrearAdmin(): void {
+  const dialogRef = this.dialog.open(CrearAdminComponent, {
+    panelClass: 'dialog-crear-admin'
+  });
+
+  dialogRef.afterClosed().subscribe(result => {
+    if (result) {
+      this.cargarUsuarios();
+    }
+  });
+
+  }
 
 }

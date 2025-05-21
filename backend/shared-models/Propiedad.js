@@ -9,6 +9,7 @@ module.exports = (sequelize) => {
     descripcion:  { type: DataTypes.TEXT,      allowNull: false },
     direccion:    { type: DataTypes.STRING,    allowNull: false },
     precio:       { type: DataTypes.DECIMAL(10,2), allowNull: false },
+        tipo_propiedad:  { type: DataTypes.ENUM('casa', 'departamento'), allowNull: false }, 
     estado:       { type: DataTypes.ENUM('disponible','arrendada','eliminada'), defaultValue: 'disponible' },
     creado_en:    { type: DataTypes.DATE,      defaultValue: DataTypes.NOW },
     actualizado_en:{ type: DataTypes.DATE,      defaultValue: DataTypes.NOW }

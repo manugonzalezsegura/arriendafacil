@@ -11,7 +11,11 @@ const verificarRol = require("../middlewares/verificarRol");
 // Estadísticas ML
 
 // Usuarios
-router.get("/usuarios", verificarToken, verificarRol(["admin"]), adminUsuariosController.getAllUsuarios);
-router.delete("/usuarios/:id", verificarToken, verificarRol(["admin"]), adminUsuariosController.deleteUsuario);
 
+router.get("/usuarios", verificarToken, verificarRol(["admin"]), adminUsuariosController.getAllUsuarios);
+router.post("/usuarios", verificarToken, verificarRol(["admin"]), adminUsuariosController.crearUsuarioAdmin);
+router.get("/form-schema", verificarToken, verificarRol(["admin"]), adminUsuariosController.getRegisterFormSchema); // ✅ ESTA es la ruta correcta
+router.delete("/usuarios/:id", verificarToken, verificarRol(["admin"]), adminUsuariosController.deleteUsuario);
+router.put('/usuarios/:id', verificarToken, verificarRol(['admin']), adminUsuariosController.updateUsuario);
 module.exports = router;
+

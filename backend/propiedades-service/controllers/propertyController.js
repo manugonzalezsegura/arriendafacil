@@ -6,22 +6,29 @@ const { Propiedad ,UsuarioRol, Rol} = require('../models');
 
 exports.createProperty = async (req, res) => {
   try {
-    // ② Usa el campo que firma el token: req.user.id_usuario
-    const id_usuario  = req.user.id_usuario;
-    const { titulo, descripcion, direccion, precio } = req.body;
-    if (!titulo || !descripcion || !direccion || !precio)
+    const id_usuario = req.user.id_usuario;
+    const { titulo, descripcion, direccion, precio, id_comuna, tipo_propiedad } = req.body;
+
+    if (!titulo || !descripcion || !direccion || !precio || !id_comuna || !tipo_propiedad)
       return res.status(400).json({ message: 'Faltan datos obligatorios' });
 
     const property = await Propiedad.create({
-      id_usuario, 
-      titulo, descripcion, direccion, precio
+      id_usuario,
+      titulo,
+      descripcion,
+      direccion,
+      precio,
+      id_comuna,
+      tipo_propiedad
     });
+
     res.status(201).json({ message: 'Propiedad creada', property });
   } catch (error) {
     console.error('❌ createProperty error:', error.message);
     return res.status(500).json({ message: 'Error al crear propiedad', error: error.message });
   }
 };
+
 
 
 
@@ -161,13 +168,17 @@ function generarPropiedadSchema() {
         minimum: 0,
         title: 'Precio'
       },
-      estado: {
+      tipo_propiedad: {
         type: 'string',
-        enum: ['disponible', 'arrendada', 'eliminada'],
-        title: 'Estado'
+        enum: ['casa', 'departamento'],
+        title: 'Tipo de Propiedad'
+      },
+      id_comuna: {
+        type: 'integer',
+        title: 'Comuna' // será usada en el frontend con la lista cargada desde región
       }
     },
-    required: ['titulo', 'descripcion', 'direccion', 'precio']
+    required: ['titulo', 'descripcion', 'direccion', 'precio', 'tipo_propiedad', 'id_comuna']
   };
 }
 

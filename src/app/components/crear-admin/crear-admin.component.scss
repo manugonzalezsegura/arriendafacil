@@ -1,0 +1,23 @@
+.crear-admin-content {
+  min-width: 300px;
+  max-width: 600px;
+  padding: 24px;
+  background-color: #fff;
+}
+
+.crear-admin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+mat-form-field {
+  width: 100%;
+}
+
+.crear-admin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}

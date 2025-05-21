@@ -17,9 +17,10 @@ const models        = require('./models');
 // 3️⃣ Rutas y middleware
 const regionRoutes = require('./routes/regionRoutes')
 const propertyRoutes = require('./routes/propertyRoutes');
+const adminPropiedadRoutes = require('./routes/adminRoutes');
 const userStubRoutes = require('./routes/userStubRoutes');
 const postulacionRoutes = require('./routes/postulacionRoutes');
-
+const { listarRutas } = require('./utils/listarRutas');
 const { ports }      = require('./config/env');
 const { start: startUserEvents } = require('./eventos/userEvents');
 
@@ -46,6 +47,7 @@ console.log('— shared-models files:', fs.readdirSync(path.resolve(__dirname, '
 app.use('/api/propiedad', propertyRoutes);
 app.use('/api/ubicacion', regionRoutes);
 app.use('/postulaciones', postulacionRoutes);
+app.use('/api/admin', adminPropiedadRoutes); 
 
 // 8️⃣ Ruta debug
 app.get('/debug-headers', (req, res) => res.json(req.headers));
@@ -53,4 +55,12 @@ app.get('/debug-headers', (req, res) => res.json(req.headers));
 // 9️⃣ Arranca servidor
 app.listen(ports.prop, () => {
   console.log(`🏠 Properties Service escuchando en http://localhost:${ports.prop}`);
+  console.log('\n📋 RUTAS REGISTRADAS EN PROPIEDADES-SERVICE:\n');
+  [...listarRutas(propertyRoutes, '/api/propiedad'),
+   ...listarRutas(regionRoutes, '/api/ubicacion'),
+   ...listarRutas(postulacionRoutes, '/postulaciones'),
+   ...listarRutas(adminPropiedadRoutes, '/api/admin')
+  ].forEach(r =>
+    console.log(`🔹 [${r.methods.join(', ')}] ${r.path}`)
+  );
 });

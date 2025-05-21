@@ -22,7 +22,11 @@ import { ReactiveFormsModule } from '@angular/forms';
 
 import { HTTP_INTERCEPTORS } from '@angular/common/http';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
-
+import { EditarUsuarioDialogComponent } from './components/editar-usuario-dialog/editar-usuario-dialog.component';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatIconModule } from '@angular/material/icon'; // <-- 👈 Importa esto
 
 
 
@@ -30,7 +34,8 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
 @NgModule({
   declarations: [
     AppComponent,
-    NavbarComponent  // ✅ Correcto
+    NavbarComponent,  
+    EditarUsuarioDialogComponent,
   ],
   imports: [
     BrowserModule,
@@ -39,6 +44,11 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     HttpClientModule,
     ReactiveFormsModule,
     RouterModule, // 👈 Necesario para routerLink
+    MatDialogModule, // asegúrate de importar esto también
+    MatFormFieldModule,
+    MatInputModule,
+    MatIconModule
+    
   ],
   exports: [
     NavbarComponent  // ✅ Necesario para usar <app-navbar>

@@ -1,0 +1,15 @@
+<h2 mat-dialog-title>Editar</h2>
+
+<mat-dialog-content [formGroup]="form">
+  <ng-container *ngFor="let campo of campos">
+    <mat-form-field appearance="outline" style="width: 100%; margin-top: 10px;">
+      <mat-label>{{ campo | titlecase }}</mat-label>
+      <input matInput [formControlName]="campo" />
+    </mat-form-field>
+  </ng-container>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancelar()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="guardar()">Guardar</button>
+</mat-dialog-actions>
