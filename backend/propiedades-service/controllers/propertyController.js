@@ -187,3 +187,5 @@ exports.getPropiedadSchema = (req, res) => {
   const schema = generarPropiedadSchema();
   res.json(schema);
 };
+
+

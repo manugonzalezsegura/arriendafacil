@@ -113,4 +113,17 @@ crearPropiedad(data: any) {
 }
 
 
+
+  guardarImagenesPropiedad(id_propiedad: number, urls: string[]) {
+  const token = localStorage.getItem('accessToken');
+  const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+
+  // Ruta backend esperada: POST /api/propiedad/:id/imagenes
+  return this.http.post(
+    `http://localhost:3001/api/propiedad/${id_propiedad}/imagenes`,
+    { urls },
+    { headers }
+  );
+}
+
 }

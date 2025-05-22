@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 
 import { CrearPropiedadPageRoutingModule } from './crear-propiedad-routing.module';
+import { UploadImageComponent } from 'src/app/components/upload-image/upload-image.component';
 
 import { CrearPropiedadPage } from './crear-propiedad.page';
 
@@ -13,8 +14,9 @@ import { CrearPropiedadPage } from './crear-propiedad.page';
     CommonModule,
     FormsModule,
     IonicModule,
-    CrearPropiedadPageRoutingModule
+    CrearPropiedadPageRoutingModule,
+    
   ],
-  declarations: [CrearPropiedadPage]
+  declarations: [CrearPropiedadPage,UploadImageComponent]
 })
 export class CrearPropiedadPageModule {}

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit,NgZone  } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToastController } from '@ionic/angular';
 import { PropiedadService } from 'src/app/services/propiedad.service';
@@ -27,11 +27,17 @@ export class CrearPropiedadPage implements OnInit {
   id_propiedad: number | null = null;
   modoEdicion = false;
 
+
+    // ✅ Para almacenar URLs de imágenes subidas
+    imagenesSubidas: string[] = [];
+
+
   constructor(
     private propiedadService: PropiedadService,
     private route: ActivatedRoute,
     private toastCtrl: ToastController,
-    private router: Router
+    private router: Router,
+     private ngZone: NgZone,
   ) {}
 
   ngOnInit() {
@@ -83,7 +89,14 @@ export class CrearPropiedadPage implements OnInit {
     });
   }
 
-  crearPropiedad() {
+
+    onUrlsRecibidas(urls: string[]) {
+    console.log('✅ URLs recibidas desde upload-image:', urls);
+    this.imagenesSubidas = urls;
+    }
+
+
+    crearPropiedad() {
     const datos: CrearPropiedadDTO = {
       ...this.propiedad,
       precio: Number(this.propiedad.precio)
@@ -99,8 +112,9 @@ export class CrearPropiedadPage implements OnInit {
       });
     } else {
       this.propiedadService.guardarPropiedad(datos).subscribe({
-        next: () => {
+        next: (response: any) => {
           this.mostrarToast('Propiedad creada');
+          this.guardarImagenesDePropiedad(response.id_propiedad); 
           this.router.navigate(['/mis-propiedades']);
         },
         error: () => this.mostrarToast('Error al crear propiedad')
@@ -116,6 +130,28 @@ export class CrearPropiedadPage implements OnInit {
     });
     await toast.present();
   }
+
+
+ guardarImagenesDePropiedad(id_propiedad: number) {
+  if (this.imagenesSubidas.length === 0) {
+    this.router.navigate(['/mis-propiedades']);
+    return;
+  }
+
+  this.propiedadService
+    .guardarImagenesPropiedad(id_propiedad, this.imagenesSubidas)
+    .subscribe({
+      next: () => {
+        console.log('✅ Imágenes guardadas correctamente');
+        this.router.navigate(['/mis-propiedades']); // ✅ Solo redirige aquí
+      },
+      error: () => {
+        console.error('❌ Error al guardar imágenes');
+        this.router.navigate(['/mis-propiedades']); // ✅ Incluso si falla, se redirige igual
+      }
+    });
+}
+
 
 }
 

@@ -60,6 +60,16 @@
       </ion-select>
     </ion-item>
 
+    <ion-card class="ion-margin-top">
+    <ion-card-header>
+    <ion-card-title>Imágenes de la Propiedad</ion-card-title>
+    </ion-card-header>
+    <ion-card-content>
+    <app-upload-image (urlsSubidas)="onUrlsRecibidas($event)"></app-upload-image>
+    </ion-card-content>
+    </ion-card>
+
+
     <ion-button expand="full" type="submit" class="ion-margin-top">
       {{ modoEdicion ? 'Actualizar Propiedad' : 'Crear Propiedad' }}
     </ion-button>

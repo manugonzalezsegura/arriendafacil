@@ -23,7 +23,7 @@ module.exports = (sequelize) => {
   const HistorialArrendamiento = require('./HistorialArrendamiento')(sequelize);
   const PerfilArrendador = require('./PerfilArrendador')(sequelize);
   const ResultadoML = require ('./ResultadoML')(sequelize);
-
+  const ImagenPropiedad = require('./ImagenPropiedad')(sequelize);
 
   // Relaciones entre modelos
   Usuario.belongsToMany(Rol,        { through: UsuarioRol, foreignKey: 'id_usuario' });
@@ -90,6 +90,10 @@ module.exports = (sequelize) => {
   Propiedad.hasMany(HistorialArrendamiento, { foreignKey: 'id_propiedad' });
   HistorialArrendamiento.belongsTo(Propiedad, { foreignKey: 'id_propiedad' });
   // Devuelve todos los modelos definidos
+
+  Propiedad.hasMany(ImagenPropiedad, { foreignKey: 'id_propiedad' });
+  ImagenPropiedad.belongsTo(Propiedad, { foreignKey: 'id_propiedad' });
+
   return {
     Usuario,
     Rol,
@@ -104,6 +108,7 @@ module.exports = (sequelize) => {
     HistorialArrendamiento,
     PerfilArrendador,
     ResultadoML,
-    PagoMensual
+    PagoMensual,
+    ImagenPropiedad
   };
 };
