@@ -3,7 +3,7 @@ const router = require('express').Router();
 const {
   createValoracion,
   listRecibidas,
-  listHechas
+  listHechas,
 } = require('../controllers/valoracionController');
 const authMiddleware = require('../middlewares/authMiddleware');
 
