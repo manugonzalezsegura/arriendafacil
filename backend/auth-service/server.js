@@ -71,7 +71,7 @@ app.get('/debug-headers', (req, res) => {
 
 // 🛠️ Sincronización y servidor
 // Sincronizar y levantar server
-sequelize.sync({ alter: true }).then(() => {
+sequelize.sync({ alter: false}).then(() => {
   console.log('✅ Tablas sincronizadas correctamente');
 
   initRabbit().then(() => {

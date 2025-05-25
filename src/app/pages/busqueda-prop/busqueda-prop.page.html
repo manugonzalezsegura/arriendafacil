@@ -36,18 +36,27 @@
     <ion-button expand="full" type="submit">Buscar Propiedades</ion-button>
   </form>
 
-  <ion-list *ngIf="propiedades.length > 0">
-    <ion-card *ngFor="let propiedad of propiedades" (click)="verDetalle(propiedad.id_propiedad)">
-      <ion-card-header>
-        <ion-card-title>{{ propiedad.titulo }}</ion-card-title>
-        <ion-card-subtitle>${{ propiedad.precio }}</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <p>{{ propiedad.descripcion }}</p>
-        <p><strong>Dirección:</strong> {{ propiedad.direccion }}</p>
-        <p><strong>Comuna:</strong> {{ propiedad.Comuna?.nombre }}</p>
-        <p><strong>Región:</strong> {{ propiedad.Comuna?.Region?.nombre }}</p>
-      </ion-card-content>
-    </ion-card>
-  </ion-list>
-</ion-content>
+    <!-- Resultados -->
+    <ion-list *ngIf="propiedades.length > 0">
+
+      <ion-card *ngFor="let propiedad of propiedades" (click)="verDetalle(propiedad.id_propiedad)">
+
+    <!-- ✅ Imagen destacada protegida con ng-container -->
+    <ng-container *ngIf="propiedad.imagenes && propiedad.imagenes.length > 0">
+    <img [src]="propiedad.imagenes[0]" alt="Imagen propiedad" />
+    </ng-container>
+
+    <ion-card-header>
+      <ion-card-title>{{ propiedad.titulo }}</ion-card-title>
+      <ion-card-subtitle>${{ propiedad.precio }}</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+      <p>{{ propiedad.descripcion }}</p>
+      <p><strong>Dirección:</strong> {{ propiedad.direccion }}</p>
+      <p><strong>Comuna:</strong> {{ propiedad.Comuna?.nombre }}</p>
+      <p><strong>Región:</strong> {{ propiedad.Comuna?.Region?.nombre }}</p>
+    </ion-card-content>
+  </ion-card>
+    </ion-list>
+  </ion-content>

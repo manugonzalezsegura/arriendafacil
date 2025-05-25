@@ -7,12 +7,11 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 import { RouterModule } from '@angular/router'; // 👈 Añadir esto
 
+import { AngularFireStorageModule } from '@angular/fire/compat/storage';
+import { AngularFireModule } from '@angular/fire/compat';
 
-import { environment} from "../environments/environment";
 
-import { provideFirebaseApp, initializeApp } from '@angular/fire/app'; // Firebase initialization
-import { provideAuth,getAuth } from '@angular/fire/auth'; // Auth service
-import { provideFirestore, getFirestore } from '@angular/fire/firestore';
+
 
 import { HttpClientModule, provideHttpClient } from '@angular/common/http'; 
 import { NavbarComponent } from './components/navbar/navbar.component';
@@ -29,7 +28,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon'; // <-- 👈 Importa esto
 
 
-import { provideStorage, getStorage } from '@angular/fire/storage';
+
+
+
+
+
 
 @NgModule({
   declarations: [
@@ -47,17 +50,19 @@ import { provideStorage, getStorage } from '@angular/fire/storage';
     MatDialogModule, // asegúrate de importar esto también
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule
+    MatIconModule,
     
+   
+
   ],
   exports: [
-    NavbarComponent  // ✅ Necesario para usar <app-navbar>
+    NavbarComponent,  // ✅ Necesario para usar <app-navbar>
+    
   ],
   providers: [
-    provideFirebaseApp(() => initializeApp(environment.firebaseConfig)),
-    provideAuth(() => getAuth()),
-    provideFirestore(() => getFirestore()),
-    provideStorage(() => getStorage()),
+    
+
+    
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy },
     {
       provide: HTTP_INTERCEPTORS,

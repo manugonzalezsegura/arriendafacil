@@ -3,6 +3,7 @@
 import { HttpClient,HttpHeaders } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
+import { PropiedadConImagenes } from '../interfaces/propiedadImag.interface';
 
 
 @Injectable({
@@ -48,20 +49,19 @@ export class PropiedadService {
   }
 
 
-  filtrarPropiedades(filtros: any) {
-    const params = new URLSearchParams();
-  
-    if (filtros.id_comuna) params.append('id_comuna', filtros.id_comuna);
-    if (filtros.id_region) params.append('id_region', filtros.id_region);
-    if (filtros.precio_max) params.append('precio_max', filtros.precio_max);
-  
-    const url = `${this.apiUrl}/filtro?${params.toString()}`;
-  
-    console.log('🔎 [PropiedadService] URL filtrado:', url);
-  
-    return this.http.get(url); // Ruta pública, no requiere token
-  }
+filtrarPropiedades(filtros: any) {
+  const params = new URLSearchParams();
 
+  if (filtros.id_comuna) params.append('id_comuna', filtros.id_comuna);
+  if (filtros.id_region) params.append('id_region', filtros.id_region);
+  if (filtros.precio_max) params.append('precio_max', filtros.precio_max);
+
+  const url = `${this.apiUrl}/filtro?${params.toString()}`;
+
+  console.log('🔎 [PropiedadService] URL filtrado:', url);
+
+  return this.http.get<PropiedadConImagenes[]>(url); // ✅ TIPADO correcto
+}
 
   getMisPropiedades(): Observable<any[]> {
     const token = localStorage.getItem('accessToken');
@@ -108,15 +108,18 @@ export class PropiedadService {
   return this.http.get('/api/propiedades/schema');
   }
 
-crearPropiedad(data: any) {
-  return this.http.post('/api/propiedades', data);
-}
+  crearPropiedad(data: any) {
+    return this.http.post('/api/propiedades', data);
+  }
 
 
 
   guardarImagenesPropiedad(id_propiedad: number, urls: string[]) {
   const token = localStorage.getItem('accessToken');
   const headers = new HttpHeaders({ Authorization: `Bearer ${token}` });
+      console.log('📦 Enviando POST a backend con:');
+      console.log('🆔 ID propiedad:', id_propiedad);
+      console.log('🔗 URLs:', urls);
 
   // Ruta backend esperada: POST /api/propiedad/:id/imagenes
   return this.http.post(
@@ -124,6 +127,11 @@ crearPropiedad(data: any) {
     { urls },
     { headers }
   );
-}
+  }
+
+
+  getImagenesPropiedad(id: number) {
+    return this.http.get<any[]>(`http://localhost:3001/api/propiedad/${id}/imagenes`);
+  }
 
 }

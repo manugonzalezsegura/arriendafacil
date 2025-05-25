@@ -96,31 +96,41 @@ export class CrearPropiedadPage implements OnInit {
     }
 
 
-    crearPropiedad() {
-    const datos: CrearPropiedadDTO = {
-      ...this.propiedad,
-      precio: Number(this.propiedad.precio)
-    };
+crearPropiedad() {
+  const datos: CrearPropiedadDTO = {
+    ...this.propiedad,
+    precio: Number(this.propiedad.precio)
+  };
 
-    if (this.modoEdicion && this.id_propiedad) {
-      this.propiedadService.actualizarPropiedad(this.id_propiedad, datos).subscribe({
-        next: () => {
-          this.mostrarToast('Propiedad actualizada');
-          this.router.navigate(['/mis-propiedades']);
-        },
-        error: () => this.mostrarToast('Error al actualizar propiedad')
-      });
-    } else {
-      this.propiedadService.guardarPropiedad(datos).subscribe({
-        next: (response: any) => {
-          this.mostrarToast('Propiedad creada');
-          this.guardarImagenesDePropiedad(response.id_propiedad); 
-          this.router.navigate(['/mis-propiedades']);
-        },
-        error: () => this.mostrarToast('Error al crear propiedad')
-      });
-    }
+  if (this.modoEdicion && this.id_propiedad) {
+    this.propiedadService.actualizarPropiedad(this.id_propiedad, datos).subscribe({
+      next: () => {
+        console.log('✅ Propiedad actualizada');
+        console.log('📷 URLs almacenadas:', this.imagenesSubidas);
+        this.mostrarToast('Propiedad actualizada');
+
+        // ✔️ Validación explícita para evitar error TS2345
+        if (this.id_propiedad !== null) {
+          this.guardarImagenesDePropiedad(this.id_propiedad);
+        } else {
+          console.warn('⚠️ No se puede guardar imágenes porque id_propiedad es null');
+        }
+      },
+      error: () => this.mostrarToast('Error al actualizar propiedad')
+    });
+  } else {
+    this.propiedadService.guardarPropiedad(datos).subscribe({
+      next: (response: any) => {
+        console.log('✅ Propiedad creada:', response);
+        console.log('📷 URLs almacenadas:', this.imagenesSubidas);
+        this.mostrarToast('Propiedad creada');
+        this.guardarImagenesDePropiedad(response.id_propiedad); 
+      },
+      error: () => this.mostrarToast('Error al crear propiedad')
+    });
   }
+}
+
 
   async mostrarToast(msg: string) {
     const toast = await this.toastCtrl.create({
@@ -134,9 +144,12 @@ export class CrearPropiedadPage implements OnInit {
 
  guardarImagenesDePropiedad(id_propiedad: number) {
   if (this.imagenesSubidas.length === 0) {
+    console.warn('⚠️ No hay imágenes para guardar');
     this.router.navigate(['/mis-propiedades']);
     return;
   }
+
+    console.log('📤 Enviando imágenes al backend:', this.imagenesSubidas);
 
   this.propiedadService
     .guardarImagenesPropiedad(id_propiedad, this.imagenesSubidas)

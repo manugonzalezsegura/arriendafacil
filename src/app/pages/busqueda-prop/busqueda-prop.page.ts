@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { PropiedadService } from '../../services/propiedad.service';
 import { ToastController } from '@ionic/angular';
 import { Router } from '@angular/router'; // 👈 Asegúrate de importar esto
+import { PropiedadConImagenes } from 'src/app/interfaces/propiedadImag.interface';
 
 @Component({
   selector: 'app-busqueda-prop',
@@ -18,10 +19,10 @@ export class BusquedaPropPage implements OnInit {
     precio_max: ''
   };
 
-  propiedades: any[] = [];
+  
   regiones: any[] = [];
   comunas: any[] = [];
-
+  propiedades: PropiedadConImagenes[] = [];
   constructor(
     private propiedadService: PropiedadService,
     private toastCtrl: ToastController,
@@ -71,18 +72,43 @@ export class BusquedaPropPage implements OnInit {
   }
 
 
+
+
+
+
+
+
+
+
+
+
+
+
   
-  buscarPropiedades() {
-    this.propiedadService.filtrarPropiedades(this.filtros).subscribe({
-      next: (data: any) => {
-        this.propiedades = data;
-        if (data.length === 0) this.showToast('No se encontraron propiedades');
-      },
-      error: (err) => {
-        this.showToast('Error al buscar propiedades');
-      }
-    });
-  }
+buscarPropiedades() {
+  this.propiedadService.filtrarPropiedades(this.filtros).subscribe({
+    next: (res: PropiedadConImagenes[]) => {
+      this.propiedades = res;
+
+      this.propiedades.forEach((prop) => {
+        this.propiedadService.getImagenesPropiedad(prop.id_propiedad).subscribe({
+          next: (imgs: { url: string }[]) => {
+            prop.imagenes = imgs.map(img => img.url);
+          },
+          error: () => {
+            prop.imagenes = [];
+            console.warn(`⚠️ No se pudieron cargar imágenes para propiedad ${prop.id_propiedad}`);
+          }
+        });
+      });
+    },
+    error: () => {
+      this.propiedades = [];
+      console.error('❌ Error al buscar propiedades');
+    }
+  });
+}
+
 
   async showToast(message: string) {
     const toast = await this.toastCtrl.create({

@@ -20,6 +20,7 @@ const propertyRoutes = require('./routes/propertyRoutes');
 const adminPropiedadRoutes = require('./routes/adminRoutes');
 const userStubRoutes = require('./routes/userStubRoutes');
 const postulacionRoutes = require('./routes/postulacionRoutes');
+const imagenRoutes = require('./routes/imagenRoutes');
 const { listarRutas } = require('./utils/listarRutas');
 const { ports }      = require('./config/env');
 const { start: startUserEvents } = require('./eventos/userEvents');
@@ -29,7 +30,7 @@ app.use(cors());
 app.use(express.json());
 
 // 4️⃣ Sincroniza tablas (dev)
-sequelize.sync({ force: false })
+sequelize.sync({ alter: true })
   .then(() => console.log('🔄 Properties DB sincronizada'))
   .catch(err => console.error('❌ Error DB Properties:', err));
 
@@ -48,7 +49,7 @@ app.use('/api/propiedad', propertyRoutes);
 app.use('/api/ubicacion', regionRoutes);
 app.use('/postulaciones', postulacionRoutes);
 app.use('/api/admin', adminPropiedadRoutes); 
-
+app.use('/api', imagenRoutes);
 // 8️⃣ Ruta debug
 app.get('/debug-headers', (req, res) => res.json(req.headers));
 

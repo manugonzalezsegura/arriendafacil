@@ -8,12 +8,16 @@ import { LoginPageRoutingModule } from './login-routing.module';
 
 import { LoginPage } from './login.page';
 
+import { AngularFireAuthModule } from '@angular/fire/compat/auth';
+
+
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    LoginPageRoutingModule
+    LoginPageRoutingModule,
+    AngularFireAuthModule
   ],
   declarations: [LoginPage]
 })
