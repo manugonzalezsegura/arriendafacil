@@ -21,7 +21,7 @@ export class LoginPage implements OnInit {
   }
 
   
-  async iniciarSesion() {
+async iniciarSesion() {
     if (!this.email || !this.password) {
       console.log('❌ Ingrese un correo y contraseña');
       return;
@@ -32,7 +32,7 @@ export class LoginPage implements OnInit {
 
       if (usuario) {
         console.log('✅ Login exitoso:', usuario.uid);
-        await this.router.navigate(['/perfil-general']);
+        // No redirigir aquí → el AuthService ya lo hace según el rol
       } else {
         console.log('❌ Error en el login');
       }
@@ -40,7 +40,6 @@ export class LoginPage implements OnInit {
       console.error('❌ Error en el login:', error);
     }
   }
-
 
 
 

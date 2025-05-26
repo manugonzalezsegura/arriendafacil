@@ -183,6 +183,7 @@ exports.updateUser = async (req, res) => {
 };
 
 // 🔑 LOGIN CON FIREBASE
+// 🔑 LOGIN CON FIREBASE Y ROLES
 exports.firebaseLogin = async (req, res) => {
   const { idToken } = req.body;
   if (!idToken) return res.status(400).json({ message: 'Token de Firebase requerido' });
@@ -193,6 +194,7 @@ exports.firebaseLogin = async (req, res) => {
     console.log('✅ Firebase ID token verificado, UID:', uid);
 
     let usuario = await Usuario.findOne({ where: { uid } });
+
     if (!usuario) {
       usuario = await Usuario.create({
         uid,
@@ -202,18 +204,33 @@ exports.firebaseLogin = async (req, res) => {
       console.log('✅ Usuario creado desde Firebase:', usuario.toJSON());
     }
 
+    // 🔎 Obtener roles del usuario
+    const rolesUsuario = await UsuarioRol.findAll({
+      where: { id_usuario: usuario.id_usuario },
+      include: {
+        model: Rol,
+        attributes: ['nombre']
+      }
+    });
+
+    const roles = rolesUsuario.map(r => r.Rol?.nombre).filter(Boolean);
+    console.log('📤 Roles del usuario:', roles);
+
     const token = jwt.sign(
       { id_usuario: usuario.id_usuario, email: usuario.email },
       jwtSecret,
       { expiresIn: tokenExpiration || '1h' }
     );
 
-    res.json({ token });
+    res.json({ token, roles }); // ← ahora sí enviamos roles al frontend
   } catch (error) {
     console.error('❌ Error verificando ID Token:', error.message);
     res.status(401).json({ message: 'Token inválido o expirado' });
   }
 };
+
+
+
 
 // 🧱 FORM SCHEMA PARA FRONT
 function generarFormSchema() {

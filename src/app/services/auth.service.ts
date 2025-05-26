@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { AngularFireAuth } from '@angular/fire/compat/auth';
 import { auth } from '../../firebase-init'; 
-
+import { Router } from '@angular/router';
 @Injectable({
   providedIn: 'root'
 })
@@ -16,7 +16,7 @@ export class AuthService {
   
    private apiUrl = 'http://localhost:3000/api/register';
 
-  constructor(private http: HttpClient, private ngZone: NgZone) {
+  constructor(private http: HttpClient, private ngZone: NgZone,private router: Router) {
     console.log('🔧 AuthService inicializado');
   }
 
@@ -51,43 +51,63 @@ export class AuthService {
     }
   }
 
-  async login(email: string, password: string) {
-    console.log('🔐 Iniciando login...');
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+async login(email: string, password: string) {
+  console.log('🔐 Iniciando login...');
+  try {
+    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
 
-      if (user) {
-        console.log('✅ Sesión iniciada - UID:', user.uid);
+    if (user) {
+      console.log('✅ Sesión iniciada - UID:', user.uid);
 
-        const idToken = await getIdToken(user);
-        console.log('🪪 idToken obtenido:', idToken);
+      const idToken = await getIdToken(user);
+      console.log('🪪 idToken obtenido:', idToken);
 
-        const response: any = await lastValueFrom(
-          this.http.post('http://localhost:3000/api/firebase-login', { idToken })
-        );
+      const response: any = await lastValueFrom(
+        this.http.post('http://localhost:3000/api/firebase-login', { idToken })
+      );
 
-        if (response?.token) {
-          localStorage.setItem('accessToken', response.token);
-          console.log('✅ JWT de backend guardado en localStorage');
+      if (response?.token) {
+        localStorage.setItem('accessToken', response.token);
+        console.log('✅ JWT de backend guardado en localStorage');
+        console.log('🧪 roles desde backend:', response.roles); // 👈 agrega esta línea
 
-          this.ngZone.run(() => {
-            console.log('🚀 Redirección segura disponible dentro de NgZone');
-            // this.router.navigate(['/perfil-general']);
-          });
+        // Guardar roles si vienen del backend
+        if (response.roles && Array.isArray(response.roles)) {
+          localStorage.setItem('roles', JSON.stringify(response.roles));
+          console.log('✅ Roles guardados en localStorage:', response.roles);
         }
 
-        return user;
+        // Redirección según rol
+        this.ngZone.run(() => {
+          console.log('🚀 Redirección segura disponible dentro de NgZone');
+
+          const roles = response.roles || [];
+          if (roles.includes('admin')) {
+            this.router.navigate(['/admin-panel']);
+          } else if (roles.includes('arrendador')) {
+            this.router.navigate(['/perfil-general']);
+          } else if (roles.includes('inquilino')) {
+            this.router.navigate(['/home']);
+          } else {
+            console.warn('⚠️ Rol desconocido. Redirigiendo al inicio.');
+            this.router.navigate(['/']);
+          }
+        });
       }
 
-      console.warn('⚠️ Login fallido: usuario no encontrado');
-      return null;
-
-    } catch (error) {
-      console.error('❌ Error en el login:', error);
-      return null;
+      return user;
     }
+
+    console.warn('⚠️ Login fallido: usuario no encontrado');
+    return null;
+
+  } catch (error) {
+    console.error('❌ Error en el login:', error);
+    return null;
   }
+}
+
 
   async logout() {
     console.log('👋 Cerrando sesión...');

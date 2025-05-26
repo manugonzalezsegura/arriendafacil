@@ -25,32 +25,30 @@ export class UploadImageComponent   {
     console.log('📂 Archivos seleccionados:', this.selectedFiles);
   }
 
-  async subirImagenes() {
-    console.log('🚀 Iniciando proceso de subida...');
-    this.cargando = true;
-
-    const user = auth.currentUser;
-    if (!user) {
+  // ✅ Nuevo método llamado desde el padre (crear-propiedad.page.ts)
+  async subirTodas(): Promise<string[]> {
+    if (!auth.currentUser) {
       console.error('⛔ No hay sesión activa en Firebase. Abortando subida.');
-      alert('Debes iniciar sesión para subir imágenes.');
-      this.cargando = false;
-      return;
+      throw new Error('Debes iniciar sesión para subir imágenes.');
     }
 
-    console.log('✅ Usuario autenticado en Firebase:', user.uid);
+    if (this.selectedFiles.length === 0) {
+      console.warn('⚠️ No hay archivos seleccionados.');
+      return [];
+    }
 
     try {
+      this.cargando = true;
       const urls = await this.fireUploadService.subirMultiplesImagenes(this.selectedFiles);
       this.ngZone.run(() => {
-        console.log('✅ URLs de imágenes subidas:', urls);
-        this.urlsSubidas.emit(urls);
+        this.urlsSubidas.emit(urls); // sigue emitiendo por compatibilidad
       });
+      return urls;
     } catch (error) {
       console.error('❌ Error al subir imágenes:', error);
-      alert('Ocurrió un error al subir imágenes. Revisa la consola.');
+      throw error;
+    } finally {
+      this.cargando = false;
     }
-
-    this.cargando = false;
   }
-
 }

@@ -1,9 +1,10 @@
-import { Component, OnInit,NgZone  } from '@angular/core';
+import { Component, OnInit,NgZone ,ViewChild } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToastController } from '@ionic/angular';
 import { PropiedadService } from 'src/app/services/propiedad.service';
 import { Router ,ActivatedRoute} from '@angular/router';
 import { CrearPropiedadDTO } from 'src/app/interfaces/propiedadExtend.interface';
+import { UploadImageComponent } from 'src/app/components/upload-image/upload-image.component';
 
 @Component({
   selector: 'app-crear-propiedad',
@@ -12,7 +13,9 @@ import { CrearPropiedadDTO } from 'src/app/interfaces/propiedadExtend.interface'
    standalone: false
 })
 export class CrearPropiedadPage implements OnInit {
- propiedad: CrearPropiedadDTO = {
+ @ViewChild(UploadImageComponent) uploadImageComponent!: UploadImageComponent;
+
+  propiedad: CrearPropiedadDTO = {
     titulo: '',
     descripcion: '',
     direccion: '',
@@ -26,33 +29,26 @@ export class CrearPropiedadPage implements OnInit {
   id_region = 0;
   id_propiedad: number | null = null;
   modoEdicion = false;
-
-
-    // ✅ Para almacenar URLs de imágenes subidas
-    imagenesSubidas: string[] = [];
-
+  imagenesSubidas: string[] = [];
 
   constructor(
     private propiedadService: PropiedadService,
     private route: ActivatedRoute,
     private toastCtrl: ToastController,
     private router: Router,
-     private ngZone: NgZone,
+    private ngZone: NgZone,
   ) {}
 
   ngOnInit() {
-    // Leer ID desde la URL
     const id = this.route.snapshot.paramMap.get('id');
     this.id_propiedad = id ? +id : null;
     this.modoEdicion = !!this.id_propiedad;
 
-    // Cargar regiones
     this.propiedadService.getRegiones().subscribe({
       next: (res) => (this.regiones = res),
       error: () => this.mostrarToast('Error al cargar regiones')
     });
 
-    // Si estamos editando, cargar la propiedad
     if (this.modoEdicion) {
       this.propiedadService.getPropertyById(this.id_propiedad!).subscribe({
         next: (data) => {
@@ -64,7 +60,6 @@ export class CrearPropiedadPage implements OnInit {
             tipo_propiedad: data.tipo_propiedad,
             id_comuna: data.id_comuna
           };
-          // Cargar comuna asociada
           this.id_region = data.Comuna?.id_region || 0;
           if (this.id_region) {
             this.propiedadService.getComunasPorRegion(this.id_region).subscribe({
@@ -89,48 +84,59 @@ export class CrearPropiedadPage implements OnInit {
     });
   }
 
+  async crearPropiedad() {
+    const datos: CrearPropiedadDTO = {
+      ...this.propiedad,
+      precio: Number(this.propiedad.precio)
+    };
 
-    onUrlsRecibidas(urls: string[]) {
-    console.log('✅ URLs recibidas desde upload-image:', urls);
-    this.imagenesSubidas = urls;
+    try {
+      if (this.uploadImageComponent) {
+        this.imagenesSubidas = await this.uploadImageComponent.subirTodas();
+        console.log('📷 URLs listas para guardar:', this.imagenesSubidas);
+      }
+
+      if (this.modoEdicion && this.id_propiedad) {
+        this.propiedadService.actualizarPropiedad(this.id_propiedad, datos).subscribe({
+          next: () => {
+            this.mostrarToast('Propiedad actualizada');
+            this.guardarImagenesDePropiedad(this.id_propiedad!);
+          },
+          error: () => this.mostrarToast('Error al actualizar propiedad')
+        });
+      } else {
+        this.propiedadService.guardarPropiedad(datos).subscribe({
+          next: (response: any) => {
+            this.mostrarToast('Propiedad creada');
+            this.guardarImagenesDePropiedad(response.id_propiedad);
+          },
+          error: () => this.mostrarToast('Error al crear propiedad')
+        });
+      }
+    } catch (error) {
+      this.mostrarToast('Error al subir imágenes');
+    }
+  }
+
+  guardarImagenesDePropiedad(id_propiedad: number) {
+    if (this.imagenesSubidas.length === 0) {
+      console.warn('⚠️ No hay imágenes para guardar');
+      this.router.navigate(['/mis-propiedades']);
+      return;
     }
 
-
-crearPropiedad() {
-  const datos: CrearPropiedadDTO = {
-    ...this.propiedad,
-    precio: Number(this.propiedad.precio)
-  };
-
-  if (this.modoEdicion && this.id_propiedad) {
-    this.propiedadService.actualizarPropiedad(this.id_propiedad, datos).subscribe({
+    console.log('📤 Enviando imágenes al backend:', this.imagenesSubidas);
+    this.propiedadService.guardarImagenesPropiedad(id_propiedad, this.imagenesSubidas).subscribe({
       next: () => {
-        console.log('✅ Propiedad actualizada');
-        console.log('📷 URLs almacenadas:', this.imagenesSubidas);
-        this.mostrarToast('Propiedad actualizada');
-
-        // ✔️ Validación explícita para evitar error TS2345
-        if (this.id_propiedad !== null) {
-          this.guardarImagenesDePropiedad(this.id_propiedad);
-        } else {
-          console.warn('⚠️ No se puede guardar imágenes porque id_propiedad es null');
-        }
+        console.log('✅ Imágenes guardadas correctamente');
+        this.router.navigate(['/mis-propiedades']);
       },
-      error: () => this.mostrarToast('Error al actualizar propiedad')
-    });
-  } else {
-    this.propiedadService.guardarPropiedad(datos).subscribe({
-      next: (response: any) => {
-        console.log('✅ Propiedad creada:', response);
-        console.log('📷 URLs almacenadas:', this.imagenesSubidas);
-        this.mostrarToast('Propiedad creada');
-        this.guardarImagenesDePropiedad(response.id_propiedad); 
-      },
-      error: () => this.mostrarToast('Error al crear propiedad')
+      error: () => {
+        console.error('❌ Error al guardar imágenes');
+        this.router.navigate(['/mis-propiedades']);
+      }
     });
   }
-}
-
 
   async mostrarToast(msg: string) {
     const toast = await this.toastCtrl.create({
@@ -140,30 +146,6 @@ crearPropiedad() {
     });
     await toast.present();
   }
-
-
- guardarImagenesDePropiedad(id_propiedad: number) {
-  if (this.imagenesSubidas.length === 0) {
-    console.warn('⚠️ No hay imágenes para guardar');
-    this.router.navigate(['/mis-propiedades']);
-    return;
-  }
-
-    console.log('📤 Enviando imágenes al backend:', this.imagenesSubidas);
-
-  this.propiedadService
-    .guardarImagenesPropiedad(id_propiedad, this.imagenesSubidas)
-    .subscribe({
-      next: () => {
-        console.log('✅ Imágenes guardadas correctamente');
-        this.router.navigate(['/mis-propiedades']); // ✅ Solo redirige aquí
-      },
-      error: () => {
-        console.error('❌ Error al guardar imágenes');
-        this.router.navigate(['/mis-propiedades']); // ✅ Incluso si falla, se redirige igual
-      }
-    });
-}
 
 
 }

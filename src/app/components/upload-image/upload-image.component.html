@@ -1,7 +1,3 @@
 <div>
   <input type="file" (change)="onFileSelected($event)" multiple />
-
-  <button (click)="subirImagenes()" [disabled]="cargando || selectedFiles.length === 0">
-    {{ cargando ? 'Subiendo...' : 'Subir Imágenes' }}
-  </button>
 </div>
